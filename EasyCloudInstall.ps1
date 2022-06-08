@@ -272,8 +272,6 @@ Function Get-GitApp {
                 }
 
                 Write-Host "$Name have been installed" -ForegroundColor Green
-                Write-Host "#######"
-                $scriptDir
                 Return $scriptDir
             }
 
@@ -646,8 +644,6 @@ Function Start-Installation {
         
         $BackPath = Get-GitApp -installDir $installDir -Name "BackServer" -dirURL "https://github.com/Hugouverneur/easyCloudBackend/archive/refs/heads/main.zip"
         $FrontPath = Get-GitApp -installDir $installDir -Name "WebInterface" -dirURL "https://github.com/Hugouverneur/easyCloud/archive/refs/heads/main.zip"
-        
-        Write-Host "#######"
 
         Start-Sleep -Seconds 2
         Set-EasyCloudADStrategy -installDir $installDir
