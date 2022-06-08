@@ -1,4 +1,4 @@
-﻿
+
 Function Get-VMDeploymentPath {
     $Path = (Get-Module VMDeployment).Path
 
@@ -17,15 +17,17 @@ Function Get-VMDeploymentPath {
     Set-Location $basePath
     Return $basePath
 }
-﻿
+
 Function Find-DiskExistence {
     Param(
         [Parameter(Mandatory=$true)]
-        [String]$VMDisk
+        [String]$VMDisk,
+        [Parameter(Mandatory=$true)]
+        [String]$VirtualizationServerName
     )
 
     Process {
-        $DiskList = Get-VMHardDiskDrive *
+        $DiskList = Get-VMHardDiskDrive * -ComputerName $VirtualizationServerName
 
         Foreach($Disk in $DiskList) {
             If($Disk.Path -eq $VMDisk) {
@@ -120,9 +122,9 @@ Function Add-NewVM {
 
     Process {
         Try {
-            $VMDisk = "F:\ESTIAM\M1 - ESTIAM\PIM\EasyCloud\VM\Storage\$VMName" + ".vhdx"
-            $DiskChecker = Find-DiskExistence -VMDisk $VMDisk
-            $VMPath = "F:\ESTIAM\M1 - ESTIAM\PIM\EasyCloud\VM\$VMName"
+            $VMDisk = "C:\EasyCloud\VirtualMachines\Disk\$VMName" + ".vhdx"
+            $DiskChecker = Find-DiskExistence -VMDisk $VMDisk -VirtualizationServerName $VirtualizationServer
+            $VMPath = "C:\EasyCloud\VirtualMachines\VM\$VMName"
             $VMGeneration = 1
             $VMSwitchName = "Default Switch"
             $MachineCores = (Get-WmiObject Win32_processor | Select-Object NumberOfLogicalProcessors)
@@ -141,13 +143,16 @@ Function Add-NewVM {
                 Break;
             }
 
+            Write-Host "--- Command ---"
             $Command = "New-VM -Name $VMName -ComputerName $VirtualizationServer -MemoryStartupBytes $VMRam -NewVHDPath '$VMDisk' -NewVHDSizeBytes $VMDiskSize -Path "+ "'$VMPath' " + "-Generation $VMGeneration -SwitchName '$VMSwitchName'"
+            
+            Write-HOst $Command
 
             Invoke-Expression $Command
             
             Try {
-                Add-VMDvdDrive -VMName $VMName -Path "$SelectedIsoPath"
-                Set-VMProcessor $VMName -Count $VMProcessor
+                Add-VMDvdDrive -VMName $VMName -Path "$SelectedIsoPath" -ComputerName $VirtualizationServer
+                Set-VMProcessor $VMName -Count $VMProcessor -ComputerName $VirtualizationServer
                 Write-Host "(/) Sucessful verification" -ForegroundColor Green
             } 
             
@@ -159,15 +164,14 @@ Function Add-NewVM {
             Write-Host "(/) Sucessful deployment" -ForegroundColor Green
             
             Try {
-                $Save = 'Save-Configuration -VMName $VMName -VMRam $VMRam -VMDisk "$VMDisk" -VMDiskSize $VMDiskSize -VMLocation "$VMPath" -VMGeneration $VMGeneration -VMIso $VMOS -VMSwitchName $VMSwitchName'
-                Invoke-Expression $Save
+                #$Save = 'Save-Configuration -VMName $VMName -VMRam $VMRam -VMDisk "$VMDisk" -VMDiskSize $VMDiskSize -VMLocation "$VMPath" -VMGeneration $VMGeneration -VMIso $VMOS -VMSwitchName $VMSwitchName'
+                #Invoke-Expression $Save
                 Write-Host "(i) Configuration file have been saved in the following folder " -ForegroundColor Cyan -NoNewline
-                Write-Host "F:\ESTIAM\M1 - ESTIAM\PIM\EasyCloud\VM\Config" -BackgroundColor White -ForegroundColor DarkYellow
+                Write-Host "$Path\Config" -BackgroundColor White -ForegroundColor DarkYellow
                 Write-Host " "
             } Catch {
                 Write-Warning "The configuration haven't been saved "
             }
-            
         } 
         
         Catch {
@@ -180,18 +184,20 @@ Function Add-NewVM {
 Function Uninstall-VM {
     Param(
         [Parameter(Mandatory=$true)]
-        [String]$VMName
+        [String]$VMId,
+        [Parameter(Mandatory=$true)]
+        [String]$VirtulizationServer
     )
 
     Process {
         Try {
-            $VMPathToDelete = ((Get-VM | Where-Object {$_.Name -like $VMName} | Select-Object HardDrives).HardDrives).Path
-            Remove-Item -Path $VMPathToDelete
-            Write-Host "Virtual machine named $VMName have been deleted" -ForegroundColor Green
+            $VMPathToDelete = ((Get-VM -ComputerName $VirtulizationServer | Where-Object {$_.Name -like $VMName} | Select-Object HardDrives).HardDrives).Path
+            Invoke-Command -ScriptBlock {Remove-Item -Path $VMPathToDelete} -ComputerName $VirtulizationServer
+            Write-Host "Virtual machine named $VMName have been deleted on $VirtualizationServer" -ForegroundColor Green
         } Catch {
             Write-Error "A problem occured during the deletion"
         }
     }
 }
 
-Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Test 
+Export-ModuleMember -Function Add-NewVM, Uninstall-VM
