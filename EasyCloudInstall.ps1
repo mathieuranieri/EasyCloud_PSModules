@@ -272,6 +272,8 @@ Function Get-GitApp {
                 }
 
                 Write-Host "$Name have been installed" -ForegroundColor Green
+                Write-Host "#######"
+                $scriptDir
                 Return $scriptDir
             }
 
@@ -296,7 +298,7 @@ Function Set-EasyCloudADStrategy {
 
     Process {
         $configDir = "$installDir\Configuration\IsoFiles"
-        $configDir = $scriptDir.replace(" ", "")
+        $configDir = $configDir.replace(" ", "")
 
         $DomainName = (Get-ADDomain).DistinguishedName
 
@@ -346,9 +348,9 @@ Function Set-EasyCloudADStrategy {
             )
 
             $configDir = $configDir.replace(' ', '')
-            $configDir
+
             New-SmbShare -Path $configDir -Name EasyCloudISO -FullAccess $ADGroups
-            Write-Host "ISO File have to be put in following folder: $configDir"
+            Write-Host "ISO File have to be put in following folder: $configDir" -ForegroundColor Black -BackgroundColor White
         }
 
         Catch {
@@ -645,6 +647,8 @@ Function Start-Installation {
         $BackPath = Get-GitApp -installDir $installDir -Name "BackServer" -dirURL "https://github.com/Hugouverneur/easyCloudBackend/archive/refs/heads/main.zip"
         $FrontPath = Get-GitApp -installDir $installDir -Name "WebInterface" -dirURL "https://github.com/Hugouverneur/easyCloud/archive/refs/heads/main.zip"
         
+        Write-Host "#######"
+
         Start-Sleep -Seconds 2
         Set-EasyCloudADStrategy -installDir $installDir
 
