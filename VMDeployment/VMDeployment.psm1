@@ -100,6 +100,10 @@ Function Save-Configuration {
     }
 }
 
+Function Get-AvailableIso {
+    Get-VMDeploymentPath
+}
+
 Function Add-NewVM {
     Param(
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
@@ -143,10 +147,7 @@ Function Add-NewVM {
                 Break;
             }
 
-            Write-Host "--- Command ---"
-            $Command = "New-VM -Name $VMName -ComputerName $VirtualizationServer -MemoryStartupBytes $VMRam -NewVHDPath '$VMDisk' -NewVHDSizeBytes $VMDiskSize -Path "+ "'$VMPath' " + "-Generation $VMGeneration -SwitchName '$VMSwitchName'"
-            
-            Write-HOst $Command
+            $Command = "New-VM -Name $VMName -ComputerName $VirtualizationServer -MemoryStartupBytes $VMRam -NewVHDPath '$VMDisk' -NewVHDSizeBytes $VMDiskSize -Path "+ "'$VMPath' " + "-Generation $VMGeneration -SwitchName '$VMSwitchName' -ComputerName $VirtualizationServer"
 
             Invoke-Expression $Command
             
@@ -200,4 +201,4 @@ Function Uninstall-VM {
     }
 }
 
-Export-ModuleMember -Function Add-NewVM, Uninstall-VM
+Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso
