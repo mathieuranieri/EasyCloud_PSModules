@@ -345,8 +345,10 @@ Function Set-EasyCloudADStrategy {
                 "OTHER_VIRTUALIZATION"
             )
 
+            $configDir = $configDir.replace(' ', '')
+            $configDir
             New-SmbShare -Path $configDir -Name EasyCloudISO -FullAccess $ADGroups
-            Write-Host "Permissions have been set" -ForegroundColor Green
+            Write-Host "ISO File have to be put in following folder: $configDir"
         }
 
         Catch {
@@ -498,8 +500,18 @@ Function Add-VirtualizationServer {
                     }
 
                     Add-ADGroupMember -Identity $Group -Members (Get-ADComputer -Identity $server)
-                    Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\Disk" -ItemType Directory} -ComputerName $server
-                    Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\VM" -ItemType Directory} -ComputerName $server
+
+                    If(Invoke-Command -ScriptBlock {Test-Path "C:\EasyCloud\VirtualMachines\Disk"} -ComputerName $server) {
+                    
+                    } Else {
+                        Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\Disk" -ItemType Directory} -ComputerName $server
+                    }
+
+                    If(Invoke-Command -ScriptBlock {Test-Path "C:\EasyCloud\VirtualMachines\VM"} -ComputerName $server) {
+                    
+                    } Else {
+                        Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\VM" -ItemType Directory} -ComputerName $server -ComputerName $server
+                    }
                 }
             }
 
