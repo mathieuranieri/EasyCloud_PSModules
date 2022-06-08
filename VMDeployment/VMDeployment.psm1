@@ -101,7 +101,17 @@ Function Save-Configuration {
 }
 
 Function Get-AvailableIso {
-    Get-VMDeploymentPath
+        $Path = Get-VMDeploymentPath
+        $Path = "$Path\Configuration\IsoFiles"
+
+        $IsoList = @()
+
+        ((ls -Path $Path).Name) | ForEach-Object {
+            $IsoList += $_ 
+        }
+
+        ConvertTo-Json -InputObject $IsoList
+        Return $IsoList
 }
 
 Function Add-NewVM {
