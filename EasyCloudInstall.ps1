@@ -347,8 +347,12 @@ Function Set-EasyCloudADStrategy {
 
             $configDir = $configDir.replace(' ', '')
 
-            New-SmbShare -Path $configDir -Name EasyCloudISO -FullAccess $ADGroups
-            Write-Host "ISO File have to be put in following folder: $configDir" -ForegroundColor Black -BackgroundColor White
+            If($null -eq (Get-SmbShare -Name EasyCloudIso) {
+                New-SmbShare -Path $configDir -Name EasyCloudISO -FullAccess $ADGroups
+                Write-Host "ISO File have to be put in following folder: $configDir" -ForegroundColor Black -BackgroundColor White
+            } Else {
+                Write-Host "Share folder EasyCloudIso will be used" -ForegroundColor Green
+            }
         }
 
         Catch {
@@ -502,7 +506,7 @@ Function Add-VirtualizationServer {
 
                         Add-ADGroupMember -Identity $Group -Members (Get-ADComputer -Identity $server)
 
-                        $shareServer = hostname
+                        $shareServer = (hostname).ToUpper()
                         $shareServer = "\\$shareServer\IsoFiles"
 
                         Invoke-Command -ScriptBlock {New-SmbMapping -LocalPath X: -RemotePath $shareServer} -ComputerName $server
