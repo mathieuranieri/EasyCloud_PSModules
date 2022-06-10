@@ -358,172 +358,179 @@ Function Set-EasyCloudADStrategy {
 }
 
 Function Add-VirtualizationServer {
-    Write-Host "Please provide server name" -ForegroundColor Cyan
-    $serverList = (Get-ADComputer -Filter *).Name
-    $virtualizationServers = @()
+    Process {
+        Write-Host "Please provide server name" -ForegroundColor Cyan
+        $serverList = (Get-ADComputer -Filter *).Name
+        $virtualizationServers = @()
 
-    $serverList | ForEach-Object {
-        $res = (Invoke-Command -ComputerName $_ -ScriptBlock {(Get-WindowsFeature -Name Hyper-V | Where-Object InstallState -eq "Installed")}).PSComputerName
-        if($res -ne $null) {
-            $virtualizationServers += $res
-        }
-    }
-
-    $form = New-Object System.Windows.Forms.Form
-    $form.Text = 'Data Entry Form'
-    $form.minimumSize = New-Object System.Drawing.Size(310,280)
-    $form.maximumSize = New-Object System.Drawing.Size(310,280)
-    $form.StartPosition = 'CenterScreen'
-
-    $okButton = New-Object System.Windows.Forms.Button
-    $okButton.Location = New-Object System.Drawing.Point(75,170)
-    $okButton.Size = New-Object System.Drawing.Size(75,23)
-    $okButton.Text = 'OK'
-    $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
-    $form.AcceptButton = $okButton
-    $form.Controls.Add($okButton)
-
-    $cancelButton = New-Object System.Windows.Forms.Button
-    $cancelButton.Location = New-Object System.Drawing.Point(150,170)
-    $cancelButton.Size = New-Object System.Drawing.Size(75,23)
-    $cancelButton.Text = 'Cancel'
-    $cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-    $form.CancelButton = $cancelButton
-    $form.Controls.Add($cancelButton)
-
-    $viewButton = New-Object System.Windows.Forms.Button
-    $viewButton.Location = New-Object System.Drawing.Point(115,200)
-    $viewButton.Size = New-Object System.Drawing.Size(75,23)
-    $viewButton.Text = 'View Servers'
-    $form.Controls.Add($viewButton)
-
-    $viewButton.Add_Click({
-        Write-Host "`n== Available Servers ==" -ForegroundColor Cyan
-        $virtualizationServers | Foreach-Object {
-            Write-Host "- $_" -ForegroundColor Cyan
-        }
-    })
-
-    $prodlabel = New-Object System.Windows.Forms.Label
-    $prodlabel.Location = New-Object System.Drawing.Point(10,20)
-    $prodlabel.Size = New-Object System.Drawing.Size(280,20)
-    $prodlabel.Text = 'PROD Server name to be added (SRV1,SRV02,...)'
-    $form.Controls.Add($prodlabel)
-
-    $prodBox = New-Object System.Windows.Forms.TextBox
-    $prodBox.Location = New-Object System.Drawing.Point(10,40)
-    $prodBox.Size = New-Object System.Drawing.Size(260,20)
-    $form.Controls.Add($prodBox)
-
-    $pprodlabel = New-Object System.Windows.Forms.Label
-    $pprodlabel.Location = New-Object System.Drawing.Point(10,70)
-    $pprodlabel.Size = New-Object System.Drawing.Size(500,20)
-    $pprodlabel.Text = 'PREPROD Server name to be added (SRV1,SRV02,...)'
-    $form.Controls.Add($pprodlabel)
-
-    $pprodBox = New-Object System.Windows.Forms.TextBox
-    $pprodBox.Location = New-Object System.Drawing.Point(10,90)
-    $pprodBox.Size = New-Object System.Drawing.Size(260,20)
-    $form.Controls.Add($pprodBox)
-
-    $otherlabel = New-Object System.Windows.Forms.Label
-    $otherlabel.Location = New-Object System.Drawing.Point(10,120)
-    $otherlabel.Size = New-Object System.Drawing.Size(280,20)
-    $otherlabel.Text = 'OTHER Server name to be added (SRV1,SRV02,...)'
-    $form.Controls.Add($otherlabel)
-
-    $otherBox = New-Object System.Windows.Forms.TextBox
-    $otherBox.Location = New-Object System.Drawing.Point(10,140)
-    $otherBox.Size = New-Object System.Drawing.Size(260,20)
-    $form.Controls.Add($otherBox)
-
-    $form.Topmost = $true
-
-    $form.Add_Shown({$prodBox.Select()})
-    $form.Add_Shown({$pprodBox.Select()})
-    $form.Add_Shown({$otherBox.Select()})
-    $result = $form.ShowDialog()
-
-    If($result -eq [System.Windows.Forms.DialogResult]::OK -and $prodBox.Text -eq "" -and $pprodBox.Text -eq "" -and $otherBox.Text -eq "") {
-        Add-VirtualizationServer
-    } 
-
-    ElseIf ($result -eq [System.Windows.Forms.DialogResult]::OK)
-    {
-        $PRODServer = $prodBox.Text
-        $PPRODServer = $pprodBox.Text
-        $OTHERServer = $otherBox.Text
-
-        Write-Host " "
-
-        If($PRODServer) {
-            Write-Host "Selected Servers for PROD : $PRODServer" -ForegroundColor Cyan  
+        $serverList | ForEach-Object {
+            $res = (Invoke-Command -ComputerName $_ -ScriptBlock {(Get-WindowsFeature -Name Hyper-V | Where-Object InstallState -eq "Installed")}).PSComputerName
+            if($res -ne $null) {
+                $virtualizationServers += $res
+            }
         }
 
-        If($PPRODServer) {
-            Write-Host "Selected Servers for PPROD : $PPRODServer" -ForegroundColor Cyan  
-        }
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = 'Data Entry Form'
+        $form.minimumSize = New-Object System.Drawing.Size(310,280)
+        $form.maximumSize = New-Object System.Drawing.Size(310,280)
+        $form.StartPosition = 'CenterScreen'
 
-        If($OTHERServer) {
-            Write-Host "Selected Servers for Other : $OTHERServer" -ForegroundColor Cyan  
-        }
+        $okButton = New-Object System.Windows.Forms.Button
+        $okButton.Location = New-Object System.Drawing.Point(75,170)
+        $okButton.Size = New-Object System.Drawing.Size(75,23)
+        $okButton.Text = 'OK'
+        $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $form.AcceptButton = $okButton
+        $form.Controls.Add($okButton)
 
-        Write-Host " "
+        $cancelButton = New-Object System.Windows.Forms.Button
+        $cancelButton.Location = New-Object System.Drawing.Point(150,170)
+        $cancelButton.Size = New-Object System.Drawing.Size(75,23)
+        $cancelButton.Text = 'Cancel'
+        $cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+        $form.CancelButton = $cancelButton
+        $form.Controls.Add($cancelButton)
 
-        $serverToAdd = @{
-            PROD = $PRODServer
-            PPROD = $PPRODServer
-            OTHER = $OTHERServer
-        }
+        $viewButton = New-Object System.Windows.Forms.Button
+        $viewButton.Location = New-Object System.Drawing.Point(115,200)
+        $viewButton.Size = New-Object System.Drawing.Size(75,23)
+        $viewButton.Text = 'View Servers'
+        $form.Controls.Add($viewButton)
 
-        $serverToAdd.Keys | Foreach-Object {
-            Try {
-                $filterServer = $serverToAdd.$_ -split(',')
+        $viewButton.Add_Click({
+            Write-Host "`n== Available Servers ==" -ForegroundColor Cyan
+            $virtualizationServers | Foreach-Object {
+                Write-Host "- $_" -ForegroundColor Cyan
+            }
+        })
 
-                Foreach($server in $filterServer) {
-                    Get-ADComputer -Identity $server | Out-Null
+        $prodlabel = New-Object System.Windows.Forms.Label
+        $prodlabel.Location = New-Object System.Drawing.Point(10,20)
+        $prodlabel.Size = New-Object System.Drawing.Size(280,20)
+        $prodlabel.Text = 'PROD Server name to be added (SRV1,SRV02,...)'
+        $form.Controls.Add($prodlabel)
 
-                    Switch($_) {
-                        "PROD" {
-                            Write-Host "Server $filterServer added in Production environment" -ForegroundColor Green
-                            $Group = "PROD_VIRTUALIZATION"
+        $prodBox = New-Object System.Windows.Forms.TextBox
+        $prodBox.Location = New-Object System.Drawing.Point(10,40)
+        $prodBox.Size = New-Object System.Drawing.Size(260,20)
+        $form.Controls.Add($prodBox)
+
+        $pprodlabel = New-Object System.Windows.Forms.Label
+        $pprodlabel.Location = New-Object System.Drawing.Point(10,70)
+        $pprodlabel.Size = New-Object System.Drawing.Size(500,20)
+        $pprodlabel.Text = 'PREPROD Server name to be added (SRV1,SRV02,...)'
+        $form.Controls.Add($pprodlabel)
+
+        $pprodBox = New-Object System.Windows.Forms.TextBox
+        $pprodBox.Location = New-Object System.Drawing.Point(10,90)
+        $pprodBox.Size = New-Object System.Drawing.Size(260,20)
+        $form.Controls.Add($pprodBox)
+
+        $otherlabel = New-Object System.Windows.Forms.Label
+        $otherlabel.Location = New-Object System.Drawing.Point(10,120)
+        $otherlabel.Size = New-Object System.Drawing.Size(280,20)
+        $otherlabel.Text = 'OTHER Server name to be added (SRV1,SRV02,...)'
+        $form.Controls.Add($otherlabel)
+
+        $otherBox = New-Object System.Windows.Forms.TextBox
+        $otherBox.Location = New-Object System.Drawing.Point(10,140)
+        $otherBox.Size = New-Object System.Drawing.Size(260,20)
+        $form.Controls.Add($otherBox)
+
+        $form.Topmost = $true
+
+        $form.Add_Shown({$prodBox.Select()})
+        $form.Add_Shown({$pprodBox.Select()})
+        $form.Add_Shown({$otherBox.Select()})
+        $result = $form.ShowDialog()
+
+        If($result -eq [System.Windows.Forms.DialogResult]::OK -and $prodBox.Text -eq "" -and $pprodBox.Text -eq "" -and $otherBox.Text -eq "") {
+            Add-VirtualizationServer
+        } 
+
+        ElseIf ($result -eq [System.Windows.Forms.DialogResult]::OK)
+        {
+            $PRODServer = $prodBox.Text
+            $PPRODServer = $pprodBox.Text
+            $OTHERServer = $otherBox.Text
+
+            Write-Host " "
+
+            If($PRODServer) {
+                Write-Host "Selected Servers for PROD : $PRODServer" -ForegroundColor Cyan  
+            }
+
+            If($PPRODServer) {
+                Write-Host "Selected Servers for PPROD : $PPRODServer" -ForegroundColor Cyan  
+            }
+
+            If($OTHERServer) {
+                Write-Host "Selected Servers for Other : $OTHERServer" -ForegroundColor Cyan  
+            }
+
+            Write-Host " "
+
+            $serverToAdd = @{
+                PROD = $PRODServer
+                PPROD = $PPRODServer
+                OTHER = $OTHERServer
+            }
+
+            $serverToAdd.Keys | Foreach-Object {
+                Try {
+                    $filterServer = $serverToAdd.$_ -split(',')
+
+                    Foreach($server in $filterServer) {
+                        Get-ADComputer -Identity $server | Out-Null
+
+                        Switch($_) {
+                            "PROD" {
+                                Write-Host "Server $filterServer added in Production environment" -ForegroundColor Green
+                                $Group = "PROD_VIRTUALIZATION"
+                            }
+
+                            "PPROD" {
+                                Write-Host "Server $filterServer added in Preproduction environment" -ForegroundColor Green
+                                $Group = "PREPROD_VIRTUALIZATION"
+                            }
+                            "OTHER" {
+                                Write-Host "Server $filterServer added in Other environment" -ForegroundColor Green
+                                $Group = "OTHER_VIRTUALIZATION"
+                            }
                         }
 
-                        "PPROD" {
-                            Write-Host "Server $filterServer added in Preproduction environment" -ForegroundColor Green
-                            $Group = "PREPROD_VIRTUALIZATION"
+                        Add-ADGroupMember -Identity $Group -Members (Get-ADComputer -Identity $server)
+
+                        $shareServer = hostname
+                        $shareServer = "\\$shareServer\IsoFiles"
+
+                        Invoke-Command -ScriptBlock {New-SmbMapping -LocalPath X: -RemotePath $shareServer} -ComputerName $server
+
+                        If(Invoke-Command -ScriptBlock {Test-Path "C:\EasyCloud\VirtualMachines\Disk"} -ComputerName $server) {
+                    
+                        } Else {
+                            Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\Disk" -ItemType Directory} -ComputerName $server
                         }
-                        "OTHER" {
-                            Write-Host "Server $filterServer added in Other environment" -ForegroundColor Green
-                            $Group = "OTHER_VIRTUALIZATION"
+
+                        If(Invoke-Command -ScriptBlock {Test-Path "C:\EasyCloud\VirtualMachines\VM"} -ComputerName $server) {
+                    
+                        } Else {
+                            Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\VM" -ItemType Directory} -ComputerName $server -ComputerName $server
                         }
                     }
+                }
 
-                    Add-ADGroupMember -Identity $Group -Members (Get-ADComputer -Identity $server)
-
-                    If(Invoke-Command -ScriptBlock {Test-Path "C:\EasyCloud\VirtualMachines\Disk"} -ComputerName $server) {
-                    
-                    } Else {
-                        Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\Disk" -ItemType Directory} -ComputerName $server
-                    }
-
-                    If(Invoke-Command -ScriptBlock {Test-Path "C:\EasyCloud\VirtualMachines\VM"} -ComputerName $server) {
-                    
-                    } Else {
-                        Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\VM" -ItemType Directory} -ComputerName $server -ComputerName $server
+                Catch {
+                    If($filterServer) {
+                        Write-Host "Server: $filterServer not found" -ForegroundColor Yellow
+                        Add-VirtualizationServer
                     }
                 }
             }
 
-            Catch {
-                If($filterServer) {
-                    Write-Host "Server: $filterServer not found" -ForegroundColor Yellow
-                    Add-VirtualizationServer
-                }
-            }
+            Write-Host "`nInstallation Complete" -ForegroundColor Green
         }
-
-        Write-Host "`nInstallation Complete" -ForegroundColor Green
     }
 }
 

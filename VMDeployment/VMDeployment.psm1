@@ -101,17 +101,20 @@ Function Save-Configuration {
 }
 
 Function Get-AvailableIso {
-        $Path = Get-VMDeploymentPath
-        $Path = "$Path\Configuration\IsoFiles"
+        $shareServer = hostname
+        $isoPath = "\\$shareServer\IsoFiles"
+
+        Set-Location $isoPath
 
         $IsoList = @()
 
-        ((ls -Path $Path).Name) | ForEach-Object {
-            $IsoList += $_ 
+        ((ls -Path $Path).FullName) | ForEach-Object {
+            $IsoList += $_
         }
 
-        ConvertTo-Json -InputObject $IsoList
-        Return $IsoList
+        $IsoList = ConvertTo-Json -InputObject $IsoList
+
+        Return $IsoList      
 }
 
 Function Add-NewVM {
@@ -140,8 +143,8 @@ Function Add-NewVM {
             $DiskChecker = Find-DiskExistence -VMDisk $VMDisk -VirtualizationServerName $VirtualizationServer
             $VMPath = "C:\EasyCloud\VirtualMachines\VM\$VMName"
             $VMGeneration = 1
-            $VMSwitchName = "Default Switch"
-            $MachineCores = (Get-WmiObject Win32_processor | Select-Object NumberOfLogicalProcessors)
+            $VMSwitchName = "InternalSwitch"
+            $MachineCores = (Get-WmiObject Win32_processor -ComputerName $VirtualizationServer | Select-Object NumberOfLogicalProcessors)
 
             Write-Host $DiskChecker
 
@@ -157,10 +160,20 @@ Function Add-NewVM {
                 Break;
             }
 
-            $Command = "New-VM -Name $VMName -ComputerName $VirtualizationServer -MemoryStartupBytes $VMRam -NewVHDPath '$VMDisk' -NewVHDSizeBytes $VMDiskSize -Path "+ "'$VMPath' " + "-Generation $VMGeneration -SwitchName '$VMSwitchName' -ComputerName $VirtualizationServer"
+            If(Get-VMSwitch -ComputerName $VirtualizationServer | Where-Object Name -like InternalSwitch) {
+                Write-Host "InternalSwitch exist" -ForegroundColor Green
+            } Else {
+                New-VMSwitch -name 'InternalSwitch'  -NetAdapterName Ethernet -AllowManagementOS $true -ComputerName $VirtualizationServer
+            }
+
+            $Command = "New-VM -Name $VMName -ComputerName $VirtualizationServer -MemoryStartupBytes $VMRam -NewVHDPath '$VMDisk' -NewVHDSizeBytes $VMDiskSize -Path "+ "'$VMPath' " + "-Generation $VMGeneration -SwitchName '$VMSwitchName'"
+
+            Write-Host "$Command"
 
             Invoke-Expression $Command
             
+            Write-Host "------"
+
             Try {
                 Add-VMDvdDrive -VMName $VMName -Path "$SelectedIsoPath" -ComputerName $VirtualizationServer
                 Set-VMProcessor $VMName -Count $VMProcessor -ComputerName $VirtualizationServer
@@ -175,8 +188,8 @@ Function Add-NewVM {
             Write-Host "(/) Sucessful deployment" -ForegroundColor Green
             
             Try {
-                #$Save = 'Save-Configuration -VMName $VMName -VMRam $VMRam -VMDisk "$VMDisk" -VMDiskSize $VMDiskSize -VMLocation "$VMPath" -VMGeneration $VMGeneration -VMIso $VMOS -VMSwitchName $VMSwitchName'
-                #Invoke-Expression $Save
+                $Save = 'Save-Configuration -VMName $VMName -VMRam $VMRam -VMDisk "$VMDisk" -VMDiskSize $VMDiskSize -VMLocation "$VMPath" -VMGeneration $VMGeneration -VMIso $VMOS -VMSwitchName $VMSwitchName'
+                Invoke-Expression $Save
                 Write-Host "(i) Configuration file have been saved in the following folder " -ForegroundColor Cyan -NoNewline
                 Write-Host "$Path\Config" -BackgroundColor White -ForegroundColor DarkYellow
                 Write-Host " "
