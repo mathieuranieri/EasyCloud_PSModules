@@ -45,6 +45,8 @@ Function Save-Configuration {
         [Parameter(Mandatory=$true)]
         [String]$VMName,
         [Parameter(Mandatory=$true)]
+        [String]$VMId,
+        [Parameter(Mandatory=$true)]
         [String]$VMRam,
         [Parameter(Mandatory=$true)]
         [String]$VMDisk,
@@ -73,6 +75,7 @@ Function Save-Configuration {
         $VMSwitchName = $VMSwitchName.Replace('"', '')
 
         $VMValues = [PSCustomObject]@{
+            Id = $VMId
             Name = $VMName
             Ram = $VMRam
             DiskLocation = $VMDisk
@@ -182,9 +185,11 @@ Function Add-NewVM {
             }
 
             Write-Host "(/) Sucessful deployment" -ForegroundColor Green
+
+            $VMId = (Get-VM -Name $VMName -ComputerName $VirtualizationServer | Select-Object -Property Id).Id.Guid
             
             Try {
-                $Save = 'Save-Configuration -VMName $VMName -VMRam $VMRam -VMDisk "$VMDiskPath" -VMDiskSize $VMDiskSize -VMLocation "$VMPath" -VMGeneration $VMGeneration -VMIso $VMOS -VMSwitchName $VMSwitchName -VirtualizationServer $VirtualizationServer'
+                $Save = 'Save-Configuration -VMName $VMName -VMId $VMId -VMRam $VMRam -VMDisk "$VMDiskPath" -VMDiskSize $VMDiskSize -VMLocation "$VMPath" -VMGeneration $VMGeneration -VMIso $VMOS -VMSwitchName $VMSwitchName -VirtualizationServer $VirtualizationServer'
                 Invoke-Expression $Save
                 Write-Host " "
             } Catch {
@@ -195,7 +200,9 @@ Function Add-NewVM {
         Catch {
             Write-Warning "An error occured in the execution"
             Write-Host "(x) Deployment failed" -ForegroundColor Red
-        } 
+        }
+
+        Return $VMId
     }
 }
 
@@ -209,9 +216,21 @@ Function Uninstall-VM {
 
     Process {
         Try {
-            $VMPathToDelete = ((Get-VM -ComputerName $VirtulizationServer | Where-Object {$_.Name -like $VMName} | Select-Object HardDrives).HardDrives).Path
-            Invoke-Command -ScriptBlock {Remove-Item -Path $VMPathToDelete} -ComputerName $VirtulizationServer
-            Write-Host "Virtual machine named $VMName have been deleted on $VirtualizationServer" -ForegroundColor Green
+            $VMToDelete = (Get-VM -Id $VMId -ComputerName $VirtulizationServer)
+
+            $VMName = $VMToDelete.Name
+
+            $VMDisk = "C:\EasyCloud\VirtualMachines\Disk\" + "$VMName"+".vhdx"
+
+            Invoke-Command -ScriptBlock {Remove-Item -Path $Using:VMDisk} -ComputerName $VirtulizationServer
+
+            $VMToDelete | Remove-VM -Force
+
+            If((Get-VM -Id $VMId -ComputerName $VirtulizationServer)) {
+                Write-Error "VM $VMName have not been deleted"
+            } Else {
+                Write-Host "Virtual machine have been deleted" -ForegroundColor Green
+            }
         } Catch {
             Write-Error "A problem occured during the deletion"
         }
