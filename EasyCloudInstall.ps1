@@ -175,6 +175,18 @@ Function Add-FolderStructure {
         } else {
             Write-Host "`nEnvironment variable already exists" -ForegroundColor Yellow
         }
+
+        Try {
+            $IsoFolder = "$mainPath\Configuration\IsoFiles"
+            $IsoFolder = $IsoFolder.replace(' ', '')
+
+            New-SmbShare -Name "Iso" -Path $IsoFolder
+            Write-Host "ISO File folder: IsoFolder" -ForegroundColor Green
+        } Catch {
+            Write-Error "Shared folder: $IsoFolder configuration failed"
+            Uninstall-EasyCloud -Folder $mainPath
+            Break;
+        }
     }
 }
 
@@ -204,6 +216,7 @@ Function Get-AppModules {
 
         Catch {
             Write-Host "Error while collecting modules files" -ForegroundColor Yellow
+            Uninstall-EasyCloud -Folder $installDir
             Read-Host "Press Enter to exit"
             Break;
         }
@@ -219,6 +232,7 @@ Function Get-AppModules {
             $Monitoring | Out-File "$scriptDir\VMMonitoring\VMMonitoring.psm1" -Encoding utf8
         } Else {
             Write-Error "Script folder cannot be find"
+            Uninstall-EasyCloud -Folder $installDir
             Read-Host "Press enter to exit"
             Break;
         }
@@ -268,6 +282,7 @@ Function Get-GitApp {
 
                 Catch {
                     Write-Error "Node library installation failed"
+                    Uninstall-EasyCloud -Folder $installDir
                     Break;
                 }
 
@@ -277,11 +292,13 @@ Function Get-GitApp {
 
             Catch {
                 Write-Error "Error while collecting $Name files"
+                Uninstall-EasyCloud -Folder $installDir
                 Read-Host "Press enter to exit"
                 Break;    
             }
         } Else {
             Write-Error "$Name folder cannot be find"
+            Uninstall-EasyCloud -Folder $installDir
             Read-Host "Press Enter to exit"
             Break;
         }
@@ -336,28 +353,6 @@ Function Set-EasyCloudADStrategy {
                 $groupname = $group.GroupName
                 Write-Host "Group $groupname already exists" -ForegroundColor Yellow
             }
-        }
-
-        Try {
-            $ADGroups = @(
-                "PROD_VIRTUALIZATION"
-                "PREPROD_VIRTUALIZATION"
-                "OTHER_VIRTUALIZATION"
-                "Administrateurs"
-            )
-
-            $configDir = $configDir.replace(' ', '')
-
-            If($null -eq (Get-SmbShare | Where-Object Name -eq "IsoFiles")) {
-                New-SmbShare -Path $configDir -Name IsoFiles -FullAccess $ADGroups
-                Write-Host "ISO File have to be put in following folder: $configDir" -ForegroundColor Black -BackgroundColor White
-            } Else {
-                Write-Host "Share folder IsoFiles will be used" -ForegroundColor Green
-            }
-        }
-
-        Catch {
-            Write-Error "Share access permissions didn't applied correctly"
         }
     }
 }
@@ -516,8 +511,8 @@ Function Add-VirtualizationServer {
                         If(Invoke-Command -ScriptBlock {Test-Path "C:\EasyCloud\VirtualMachines\VM"} -ComputerName $server) {
                     
                         } Else {
-                            Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\VM" -ItemType Directory} -ComputerName $server -ComputerName $server
-                        }
+                            Invoke-Command -ScriptBlock {New-Item -Path "C:\EasyCloud\VirtualMachines\VM" -ItemType Directory} -ComputerName $server
+                        }                          
                     }
                 }
 
@@ -676,6 +671,30 @@ Function Start-Installation {
     } Else {
         Write-Warning "System is not a Windows OS"
         Break;
+    }
+}
+
+Function Uninstall-EasyCloud {
+    Param(
+        [Parameter(Mandatory)]
+        $installFolder
+    )
+
+    Process {
+        Remove-SmbShare -Name Isofiles
+
+        $moduleFolder = ";$installFolder\App\Modules"
+        $moduleFolder = $moduleFolder.replace(" ","")
+        
+        $str = $env:PSModulePath
+
+        $str.Contains($moduleFolder)
+
+        $str = $str.replace($moduleFolder, $null)
+
+        [Environment]::SetEnvironmentVariable("PSModulePath", $str, "Machine")
+
+        Remove-Item -Path $installFolder
     }
 }
 

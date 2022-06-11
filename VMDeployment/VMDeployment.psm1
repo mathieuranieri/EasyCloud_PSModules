@@ -27,15 +27,15 @@ Function Find-DiskExistence {
     )
 
     Process {
-        $DiskList = Get-VMHardDiskDrive * -ComputerName $VirtualizationServerName
+        $DiskList = Invoke-Command -ScriptBlock {ls -Path "C:\EasyCloud\VirtualMachines\Disk\" | Select-Object Name | Where-Object Name -like "$VMDisk"} -ComputerName $VirtualizationServerName
 
-        Foreach($Disk in $DiskList) {
-            If($Disk.Path -eq $VMDisk) {
-                Return "NA"
-            } Else {
-                Write-Host "Deployment of a new virtual machine started..." -ForegroundColor Cyan
-                Return $VMDisk
-            }
+        If($DiskList) {
+            Return "NA"
+        }
+
+        Else {
+            Write-Host "Deployment of a new virtual machine started..." -ForegroundColor Cyan
+            Return $VMDisk
         }
     }
 }
@@ -56,8 +56,6 @@ Function Save-Configuration {
         [Int16]$VMGeneration,
         [Parameter(Mandatory=$true)]
         [String]$VMIso,
-        [Parameter(Mandatory=$true)]
-        [String]$ServerName,
         [Parameter(Mandatory=$true)]
         [String]$VMSwitchName,
         [Parameter(Mandatory=$true)]
@@ -91,12 +89,13 @@ Function Save-Configuration {
         }
 
         $VMName = "$VMName"+".json"
-
-        $ConfigPath = "$Path\Configuration\VirtualMachines" + "\$VMName"
-
+        $ConfigPath = "$Path"+"Configuration\VirtualMachines" + "\$VMName"
         $VMLocation = '"'+$VMLocation+'"'
 
-        $VMConfig | ConvertTo-Json -Depth 2 -Compress | Out-File $ConfigPath
+        $VMConfig | ConvertTo-Json -Depth 2 | Out-File $ConfigPath
+
+        Write-Host "(i) Configuration file have been saved in the following folder " -ForegroundColor Cyan -NoNewline
+        Write-Host "$ConfigPath" -BackgroundColor White -ForegroundColor Black
     }
 }
 
@@ -106,11 +105,11 @@ Function Get-AvailableIso {
 
         $i = 0
 
-        ((ls -Path $isoPath).Name) | ForEach-Object {
+        ((ls -Path "\\$shareServer\Isofiles").Name) | ForEach-Object {
             $i++
             $item = "Item$i"
             $IsoList.$item += @{
-                "Parent" = $shareServer 
+                "Folder" = $shareServer 
                 "Filename" = "$_" }
         }
 
@@ -141,23 +140,22 @@ Function Add-NewVM {
 
     Process {
         Try {
-            $VMDisk = "C:\EasyCloud\VirtualMachines\Disk\$VMName" + ".vhdx"
+            $VMDisk = "$VMName" + ".vhdx"
+            $VMDiskPath = "C:\EasyCloud\VirtualMachines\Disk\$VMDisk"
             $DiskChecker = Find-DiskExistence -VMDisk $VMDisk -VirtualizationServerName $VirtualizationServer
             $VMPath = "C:\EasyCloud\VirtualMachines\VM\$VMName"
             $VMGeneration = 1
             $VMSwitchName = "InternalSwitch"
             $MachineCores = (Get-WmiObject Win32_processor -ComputerName $VirtualizationServer | Select-Object NumberOfLogicalProcessors)
 
-            Write-Host $DiskChecker
-
             If($DiskChecker -eq "NA") {
-                Write-Warning "Disk with same name already exist"
+                Write-Error "Disk with same name already exist"
                 Write-Host "(x) Deployment failed" -ForegroundColor Red
                 Break;
             }
 
             If($VMProcessor -gt $MachineCores.NumberOfLogicalProcessors) {
-                Write-Warning "Number of virtual cores attributed are outpassing physical server number"
+                Write-Error "Number of virtual cores attributed are outpassing physical server number"
                 Write-Host "(x) Deployment failed" -ForegroundColor Red
                 Break;
             }
@@ -165,19 +163,15 @@ Function Add-NewVM {
             If(Get-VMSwitch -ComputerName $VirtualizationServer | Where-Object Name -like InternalSwitch) {
                 Write-Host "InternalSwitch exist" -ForegroundColor Green
             } Else {
-                New-VMSwitch -name 'InternalSwitch'  -NetAdapterName Ethernet -AllowManagementOS $true -ComputerName $VirtualizationServer
+                New-VMSwitch -name 'InternalSwitch' -NetAdapterName Ethernet -AllowManagementOS $true -ComputerName $VirtualizationServer
             }
 
-            $Command = "New-VM -Name $VMName -ComputerName $VirtualizationServer -MemoryStartupBytes $VMRam -NewVHDPath '$VMDisk' -NewVHDSizeBytes $VMDiskSize -Path "+ "'$VMPath' " + "-Generation $VMGeneration -SwitchName '$VMSwitchName'"
-
-            Write-Host "$Command"
+            $Command = "New-VM -Name $VMName -ComputerName $VirtualizationServer -MemoryStartupBytes $VMRam -NewVHDPath '$VMDiskPath' -NewVHDSizeBytes $VMDiskSize -Path "+ "'$VMPath' " + "-Generation $VMGeneration -SwitchName '$VMSwitchName'"
 
             Invoke-Expression $Command
-            
-            Write-Host "------"
 
             Try {
-                Add-VMDvdDrive -VMName $VMName -Path "$SelectedIsoPath" -ComputerName $VirtualizationServer
+                Add-VMDvdDrive -VMName $VMName -Path "$VMOS" -ComputerName $VirtualizationServer
                 Set-VMProcessor $VMName -Count $VMProcessor -ComputerName $VirtualizationServer
                 Write-Host "(/) Sucessful verification" -ForegroundColor Green
             } 
@@ -190,10 +184,8 @@ Function Add-NewVM {
             Write-Host "(/) Sucessful deployment" -ForegroundColor Green
             
             Try {
-                $Save = 'Save-Configuration -VMName $VMName -VMRam $VMRam -VMDisk "$VMDisk" -VMDiskSize $VMDiskSize -VMLocation "$VMPath" -VMGeneration $VMGeneration -VMIso $VMOS -VMSwitchName $VMSwitchName'
+                $Save = 'Save-Configuration -VMName $VMName -VMRam $VMRam -VMDisk "$VMDiskPath" -VMDiskSize $VMDiskSize -VMLocation "$VMPath" -VMGeneration $VMGeneration -VMIso $VMOS -VMSwitchName $VMSwitchName -VirtualizationServer $VirtualizationServer'
                 Invoke-Expression $Save
-                Write-Host "(i) Configuration file have been saved in the following folder " -ForegroundColor Cyan -NoNewline
-                Write-Host "$Path\Config" -BackgroundColor White -ForegroundColor DarkYellow
                 Write-Host " "
             } Catch {
                 Write-Warning "The configuration haven't been saved "
