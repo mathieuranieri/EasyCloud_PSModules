@@ -1,21 +1,30 @@
 ﻿Function Uninstall-EasyCloud {
     Process {
-        $Folder = $PSScriptRoot        
+        Try {
+            $Folder = $PSScriptRoot
+            
+            
+            $moduleFolder = ";$Folder\App\Modules"
+            $moduleFolder = $moduleFolder.replace(" ","")
+
+            Write-Host $moduleFolder
+            Read-Host "Waiting"      
         
-        Remove-SmbShare -Name Iso
+            Remove-SmbShare -Name Iso
 
-        $moduleFolder = ";$Folder\App\Modules"
-        $moduleFolder = $moduleFolder.replace(" ","")
         
-        $str = $env:PSModulePath
+            $str = $env:PSModulePath
 
-        $str.Contains($moduleFolder)
+            If($str.Contains($moduleFolder)) {
+                $str = $str.replace($moduleFolder, $null)
 
-        $str = $str.replace($moduleFolder, $null)
+                [Environment]::SetEnvironmentVariable("PSModulePath", $str, "Machine")
+            }
 
-        [Environment]::SetEnvironmentVariable("PSModulePath", $str, "Machine")
-
-        Remove-Item -Path $Folder
+            Remove-Item -Path $Folder
+        } Catch {
+            Write-Error "Error"
+        }
     }
 }
 
