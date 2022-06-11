@@ -2,7 +2,7 @@
     Process {
         $Folder = $PSScriptRoot        
         
-        Remove-SmbShare -Name Isofiles
+        Remove-SmbShare -Name Iso
 
         $moduleFolder = ";$Folder\App\Modules"
         $moduleFolder = $moduleFolder.replace(" ","")

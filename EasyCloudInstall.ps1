@@ -658,6 +658,14 @@ Function Start-Installation {
         $wc = New-Object System.Net.WebClient
         $wc.DownloadFile($url, $installLocation)
 
+        $url = "https://github.com/Goldenlagen/EasyCloud_PSModules/raw/main/InstallationPackage/EasyCloudUninstaller.exe"
+
+        $installLocation = "$installDir\EasyCloudUninstall.exe"
+        $installLocation = $installLocation.replace(" ", "")
+
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $installLocation)
+
         Register-AppShortcut -ShPath "C:\users\public\desktop\Portal EasyCloud.lnk" -ShTargetPath "http://localhost:4200" -IconPath "$installDir\Configuration\EasyCloud\EasyCloudLogo.ico"
         Register-AppShortcut -ShPath "$installDir\Portal EasyCloud.lnk" -ShTargetPath "http://localhost:4200" -IconPath "$installDir\Configuration\EasyCloud\EasyCloudLogo.ico"
 
