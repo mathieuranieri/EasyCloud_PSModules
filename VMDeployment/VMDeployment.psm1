@@ -96,18 +96,22 @@ Function Save-Configuration {
 
         $VMLocation = '"'+$VMLocation+'"'
 
-        $VMConfig | ConvertTo-Json -Depth 2 | Out-File $ConfigPath
+        $VMConfig | ConvertTo-Json -Depth 2 -Compress | Out-File $ConfigPath
     }
 }
 
 Function Get-AvailableIso {
-        $shareServer = hostname
-        $isoPath = "\\$shareServer\IsoFiles"
+        $shareServer = (hostname).ToUpper()
+        $IsoList = @{}
 
-        $IsoList = @()
+        $i = 0
 
-        ((ls -Path $Path).FullName) | ForEach-Object {
-            $IsoList += $_
+        ((ls -Path $isoPath).Name) | ForEach-Object {
+            $i++
+            $item = "Item$i"
+            $IsoList.$item += @{
+                "Parent" = $shareServer 
+                "Filename" = "$_" }
         }
 
         $IsoList = ConvertTo-Json -InputObject $IsoList
