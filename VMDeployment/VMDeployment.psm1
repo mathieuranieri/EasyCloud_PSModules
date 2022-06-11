@@ -104,8 +104,6 @@ Function Get-AvailableIso {
         $shareServer = hostname
         $isoPath = "\\$shareServer\IsoFiles"
 
-        Set-Location $isoPath
-
         $IsoList = @()
 
         ((ls -Path $Path).FullName) | ForEach-Object {

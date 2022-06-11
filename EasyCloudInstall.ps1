@@ -343,15 +343,16 @@ Function Set-EasyCloudADStrategy {
                 "PROD_VIRTUALIZATION"
                 "PREPROD_VIRTUALIZATION"
                 "OTHER_VIRTUALIZATION"
+                "Administrateurs"
             )
 
             $configDir = $configDir.replace(' ', '')
 
-            If($null -eq (Get-SmbShare -Name EasyCloudIso) {
-                New-SmbShare -Path $configDir -Name EasyCloudISO -FullAccess $ADGroups
+            If($null -eq (Get-SmbShare | Where-Object Name -eq "IsoFiles")) {
+                New-SmbShare -Path $configDir -Name IsoFiles -FullAccess $ADGroups
                 Write-Host "ISO File have to be put in following folder: $configDir" -ForegroundColor Black -BackgroundColor White
             } Else {
-                Write-Host "Share folder EasyCloudIso will be used" -ForegroundColor Green
+                Write-Host "Share folder IsoFiles will be used" -ForegroundColor Green
             }
         }
 
@@ -506,11 +507,6 @@ Function Add-VirtualizationServer {
 
                         Add-ADGroupMember -Identity $Group -Members (Get-ADComputer -Identity $server)
 
-                        $shareServer = (hostname).ToUpper()
-                        $shareServer = "\\$shareServer\IsoFiles"
-
-                        Invoke-Command -ScriptBlock {New-SmbMapping -LocalPath X: -RemotePath $shareServer} -ComputerName $server
-
                         If(Invoke-Command -ScriptBlock {Test-Path "C:\EasyCloud\VirtualMachines\Disk"} -ComputerName $server) {
                     
                         } Else {
@@ -576,7 +572,6 @@ Function Register-AppShortcut {
 
         $Shortcut.Save()
         Write-Host "Successfully created" -ForegroundColor Green
-     
     }
 }
 
