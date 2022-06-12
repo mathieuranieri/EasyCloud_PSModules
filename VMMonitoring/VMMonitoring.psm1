@@ -1,24 +1,12 @@
-﻿﻿Function Read-MonitoringMode {
+﻿﻿Function Get-VMStatus {
     Param(
         [Parameter(Mandatory=$True)]
-        $VMList
+        $VMId
     )
 
-    Begin {
-        $GetMonitoringMode = (Get-Content "F:\ESTIAM\M1 - ESTIAM\PIM\Scripts\App\PSScripts\MonitoringInfo.json" | ConvertFrom-Json).MonitoringMode
-        If($GetMonitoringMode) {
-            Write-Host "Monitoring informations will be retrieved..." -ForegroundColor Green
-            $IsMonitored = @()
-        } Else {
-            Return "Off"
-        }
-
-    }
-
     Process {
-        $VMList | ForEach-Object {
-            $IsMonitored += New-Object -TypeName psobject -Property @{VMName=$_; isMonitored=(Get-VM -Name $_ | Select-Object ResourceMeteringEnabled).ResourceMeteringEnabled}
-        }
+        Get-VMConnectAccess -VMId a155224c-466a-4096-856d-960eb3595480 -ComputerName VMSRV01
+       
 
         Return $IsMonitored
     }

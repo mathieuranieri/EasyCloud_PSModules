@@ -501,6 +501,9 @@ Function Add-VirtualizationServer {
                         }
 
                         Add-ADGroupMember -Identity $Group -Members (Get-ADComputer -Identity $server)
+                        
+                        Invoke-Command -ScriptBlock {Add-LocalGroupMember -Group "Utilisateurs de gestion à distance" -Member "$Group"} -ComputerName $server
+                        Invoke-Command -ScriptBlock {Add-LocalGroupMember -Group "Administrateurs Hyper-V" -Member "$Group"} -ComputerName $server
 
                         If(Invoke-Command -ScriptBlock {Test-Path "C:\EasyCloud\VirtualMachines\Disk"} -ComputerName $server) {
                     

@@ -237,4 +237,25 @@ Function Uninstall-VM {
     }
 }
 
-Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso
+Function Check-ApplicationUserExist {
+    Param(
+        [Parameter(Mandatory)]
+        [String]$Name,
+        [Parameter(Mandatory)]
+        [String]$Lastname
+    )
+
+    Process {
+        $Filter = "Name -like "+"`"$Name $Lastname`""
+        
+        If(Get-ADUser -Filter $Filter) {
+            Write-Host "User: $Name $Lastname found !"
+            Return $true
+        } Else {
+            Write-Host "User: $Name $Lastname not found in Active Directory"
+            Return $false
+        }
+    }
+}
+
+Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso, Check-ApplicationUserExist
