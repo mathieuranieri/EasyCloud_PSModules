@@ -49,6 +49,8 @@ Function Update-MonitoringMode {
         }
 
         $Data | ConvertTo-Json | Out-File $ConfPath
+
+        Return "Monitoring have been set to $isMonitored for VirtualMachine $VMName"
     }
 }
 
