@@ -2,32 +2,6 @@
 
 $Global:DiskPath = "F:\ESTIAM\M1 - ESTIAM\PIM\EasyCloud\VM_HardDrive"
 
-Function Update-VMName {
-    Param(
-        [Parameter(mandatory=$true)]
-        [String]$VMId,
-        [Parameter(mandatory=$true)]
-        [String]$NewVMName
-    )
-    
-    Begin {
-        Write-Host "(i) Updating VM: $VMId Name ..." -ForegroundColor Cyan 
-    }
-
-    Process {
-        Try {
-            Get-VM -Id $VMId | Rename-VM -NewName $NewVMName -PassThru | Out-Null
-            Write-Host " "
-            Write-Host "(/) Virtual Machine have been renamed: $NewVMName" -ForegroundColor Green
-            Write-Host " "
-        } 
-        
-        Catch {
-            Write-Host "(x) An error occured when the name have changed" -ForegroundColor Red
-        }
-    }
-}
-
 Function Update-VMMemory {
     Param(
         [Parameter(mandatory=$true)]
@@ -152,4 +126,4 @@ Function Dismount-VMDisk {
     }
 }
 
-Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory, Update-VMName
+Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory

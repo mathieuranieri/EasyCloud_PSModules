@@ -95,7 +95,7 @@ Get-Module -Name MyModule
 ---
 To provide the user a module documentation the following command can be used :
 ```powershell
-Get-Help MyModuleFunctions
+Get-Help MyModuleFunctions -Full
 ```
 It can be configured by adding following comment inside the function to explaine how it works :
 ```powershell
@@ -112,12 +112,6 @@ It can be configured by adding following comment inside the function to explaine
     Some bonus informations
 .LINK
     Help link for the function
-.COMPONENT
-    Name of the functionnality used by the function
-.ROLE
-    User role for this rubric
-.FUNCTIONALITY
-    Keywords describing the function usage
 #>
 ```
 
@@ -137,6 +131,20 @@ Module : [VMDeployment.psm1](./VMDeployment/VMDeployment.psm1)
 >- Uninstall virtual machine
 >- Retrieving ISO Files for a virtual machine
 
+Usage :
+```powershell
+Add-NewVM -VMName "VirtualMachine01" -VMRAM 2GB -VMDiskSize 50GB -VMOS "\\EASYCLOUD-APP\Iso\Win2016.Iso" -VMProcessor 1 -VirtualizationServer "VMSRV01"
+#Return confirmation message & Virtual Machine ID
+```
+```powershell
+Get-AvailableIso
+#Return JSON Data
+```
+```powershell
+Uninstall-VM -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -VirtualizationServer "VMSRV01"
+#Return confirmation Message
+```
+
 ### VMMonitoring
 ---
 Module : [VMMonitoring.psm1](./VMMonitoring/VMMonitoring.psm1)
@@ -145,6 +153,20 @@ Module : [VMMonitoring.psm1](./VMMonitoring/VMMonitoring.psm1)
 >- Retrieving monitoring data from a virtual machine
 >- Get the moniroting status of a virtual machine
 
+Usage :
+```powershell
+Update-MonitoringMode -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -isMonitored $True -ServerName "VMSRV01"
+#Return confirmation message
+```
+```powershell
+Get-MonitoringData -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -ServerName "VMSRV01"
+#Return JSON Data
+```
+```powershell
+Get-MonitoringMode -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980"
+#Return True / False
+```
+
 ### VMConfiguration
 ---
 Module : [VMConfiguration.psm1](./VMConfiguration/VMConfiguration.psm1)
@@ -152,3 +174,22 @@ Module : [VMConfiguration.psm1](./VMConfiguration/VMConfiguration.psm1)
 >- Modifying number of virtual processor for a virtual machine
 >- Modifying number of ram allocated for a virtual machine
 >- Mount & Dismount virtual disk on a virtual machine
+
+
+Usage :
+```powershell
+Update-VMMemory -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -NewVMRam 2GB
+#Return confirmation message
+```
+```powershell
+Update-VMVCPU  -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -NewVMVCPU 4
+#Return confirmation message
+```
+```powershell
+Add-VMDisk -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -DiskName "MyDisk" -DiskSize 100GB
+#Return confirmation message
+```
+```powershell
+Dismount-VMDisk -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -DiskName "MyDisk"
+#Return confirmation message
+```
