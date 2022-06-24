@@ -11,6 +11,10 @@
         - [Creating modules](#creating-modules)
         - [Module functionalities](#module-functionalities)
     - [EasyCloud Modules](#easycloud-modules)
+        - [Contextualization](#contextualization)
+        - [VMDeployment](#vmdeployment)
+        - [VMMonitoring](#vmmonitoring)
+        - [VMConfiguration](#vmconfiguration)
 
 
 ## Good Practises
