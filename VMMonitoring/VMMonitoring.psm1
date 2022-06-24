@@ -17,6 +17,9 @@ Function Get-MonitoringMode {
             ID of a virtual machine
         .OUTPUTS
             Monitoring value as true or false
+        .DESCRIPTION
+            This function will read the configuration file with the provided virtual machine name
+            and will retrieve the monitoring mode
         .NOTES
             Function called on virtual machine details page on app
         .LINK
@@ -45,6 +48,9 @@ Function Update-MonitoringMode {
             Name  of a virtualization server
         .OUTPUTS
             Confirmation message
+        .DESCRIPTION
+            This function will update the configuration file, set true or false the monitoring mode for the provided
+            virtual machine name and it will enable ressource metering on true and disable resource metering on false
         .NOTES
             Function called on virtual machine details page on app when button monitoring on/off is activated
         .LINK
@@ -95,6 +101,9 @@ Function Get-MonitoringData {
             Name  of a virtualization server
         .OUTPUTS
             String data formated into JSON
+        .DESCRIPTION
+            This function will collect monitoring data, cpu, ram, disk by using measure vm command it will format the
+            output as a JSON
         .NOTES
             Function called every n seconds when on virtual machine details page and monitoring is activated
         .LINK

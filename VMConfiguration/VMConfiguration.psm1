@@ -13,6 +13,9 @@ Function Update-VMMemory {
             VirtualMachine new allocated memory
         .OUTPUTS
             Confirmation message
+        .DESCRIPTION
+            This function will update the memory allocated to the provided virtual machine with
+            set vm memory command, the virtual machine have to be turned off before
         .NOTES
             Function called when settings form is commited
         .LINK
@@ -55,6 +58,9 @@ Function Update-VMVCPU {
             VirtualMachine new number of vcpu
         .OUTPUTS
             Confirmation message
+        .DESCRIPTION
+            This function will update the number of vcpu allocated with set vm processor command
+            the virtual machine have to be turned off before
         .NOTES
             Function called when settings form is commited
         .LINK
@@ -97,6 +103,9 @@ Function Add-VMDisk {
             New disk size
         .OUTPUTS
             Confirmation message
+        .DESCRIPTION
+            This function will create and add a new disk to a virtual machine with new vhd command
+            and Add vm hard disk drive command, the virtual machine have to be turned off before
         .NOTES
             Function called when settings form is commited
         .LINK
@@ -152,6 +161,9 @@ Function Dismount-VMDisk {
             Disk name
         .OUTPUTS
             Confirmation message
+        .DESCRIPTION
+            This function will delete a disk from a provided virtual machine by using remove vm hard disk drive command
+            the virtual machine have to be turned off before
         .NOTES
             Function called when settings form is commited
         .LINK

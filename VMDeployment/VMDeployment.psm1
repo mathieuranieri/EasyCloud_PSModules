@@ -52,6 +52,9 @@ Function Get-AvailableIso {
             None
         .OUTPUTS
             List of ISO file as string formated into JSON
+        .DESCRIPTION
+            This script will read a shared folder where are stored iso file for the application
+            and will return a list as JSON
         .NOTES
             Function called on virtual machine creation page
         .LINK
@@ -90,6 +93,9 @@ Function Add-NewVM {
             VirutalMachine virtualization server 
         .OUTPUTS
             Confirmation message and virtual machine Id
+        .DESCRIPTION
+            This function will create a new virtual machine step by step by checking many parameters, if disk already exist or if allocated
+            resource are not execeding virtualization server resource. It use new-vm command. 
         .NOTES
             Function called on virtual machine creation form commited
         .LINK
@@ -196,6 +202,9 @@ Function Uninstall-VM {
             Virtualization server name
         .OUTPUTS
             Confirmation message
+        .DESCRIPTION
+            This function will delete the virtual machine data that is provided, virtual machine files
+            and disk file
         .NOTES
             Function called on virtual machine creation form commited
         .LINK
