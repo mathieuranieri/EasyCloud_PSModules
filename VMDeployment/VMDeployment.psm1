@@ -1,3 +1,5 @@
+$MainFolder = (Get-Item -Path $PSScriptRoot).Parent.FullName
+Import-Module VMMonitoring
 
 Function Get-VMDeploymentPath {
     $Path = (Get-Module VMDeployment).Path
@@ -29,76 +31,14 @@ Function Find-DiskExistence {
     Process {
         $DiskList = Invoke-Command -ScriptBlock {ls -Path "C:\EasyCloud\VirtualMachines\Disk\" | Select-Object Name | Where-Object Name -like "$VMDisk"} -ComputerName $VirtualizationServerName
 
-        If($DiskList) {
-            Return "NA"
-        }
-
-        Else {
+        If($null -eq $DiskList) {
             Write-Host "Deployment of a new virtual machine started..." -ForegroundColor Cyan
             Return $VMDisk
         }
-    }
-}
 
-Function Save-Configuration {
-    Param(
-        [Parameter(Mandatory=$true)]
-        [String]$VMName,
-        [Parameter(Mandatory=$true)]
-        [String]$VMId,
-        [Parameter(Mandatory=$true)]
-        [String]$VMRam,
-        [Parameter(Mandatory=$true)]
-        [String]$VMDisk,
-        [Parameter(Mandatory=$true)]
-        [String]$VMDiskSize,
-        [Parameter(Mandatory=$true)]
-        [String]$VMLocation,
-        [Parameter(Mandatory=$true)]
-        [Int16]$VMGeneration,
-        [Parameter(Mandatory=$true)]
-        [String]$VMIso,
-        [Parameter(Mandatory=$true)]
-        [String]$VMSwitchName,
-        [Parameter(Mandatory=$true)]
-        [String]$VirtualizationServer
-    )
-
-    Begin {
-        $Path = Get-VMDeploymentPath
-    }
-
-    Process {
-        $VMDisk = $VMDisk.Replace('"', '')
-        $VMLocation = $VMLocation.Replace('"', '')
-        $VMIso = $VMIso.Replace('"', '')
-        $VMSwitchName = $VMSwitchName.Replace('"', '')
-
-        $VMValues = [PSCustomObject]@{
-            Id = $VMId
-            Name = $VMName
-            Ram = $VMRam
-            DiskLocation = $VMDisk
-            DiskSize = $VMDiskSize
-            Location = $VMLocation
-            Generation = $VMGeneration
-            Iso = $VMIso
-            SwitchName = $VMSwitchName
-            ServerName = $VirtualizationServer
+        Else {
+            Return "NA"
         }
-
-        $VMConfig = [PSCustomObject]@{
-            $VMName = $VMValues
-        }
-
-        $VMName = "$VMName"+".json"
-        $ConfigPath = "$Path"+"Configuration\VirtualMachines" + "\$VMName"
-        $VMLocation = '"'+$VMLocation+'"'
-
-        $VMConfig | ConvertTo-Json -Depth 2 | Out-File $ConfigPath
-
-        Write-Host "(i) Configuration file have been saved in the following folder " -ForegroundColor Cyan -NoNewline
-        Write-Host "$ConfigPath" -BackgroundColor White -ForegroundColor Black
     }
 }
 
@@ -108,7 +48,7 @@ Function Get-AvailableIso {
 
         $i = 0
 
-        ((ls -Path "\\$shareServer\Isofiles").Name) | ForEach-Object {
+        ((ls -Path "\\$shareServer\Iso").Name) | ForEach-Object {
             $i++
             $item = "Item$i"
             $IsoList.$item += @{
@@ -185,15 +125,21 @@ Function Add-NewVM {
             }
 
             Write-Host "(/) Sucessful deployment" -ForegroundColor Green
-
-            $VMId = (Get-VM -Name $VMName -ComputerName $VirtualizationServer | Select-Object -Property Id).Id.Guid
             
+            $VMId = (Get-VM -Name $VMName -ComputerName $VirtualizationServer).Id
+
             Try {
-                $Save = 'Save-Configuration -VMName $VMName -VMId $VMId -VMRam $VMRam -VMDisk "$VMDiskPath" -VMDiskSize $VMDiskSize -VMLocation "$VMPath" -VMGeneration $VMGeneration -VMIso $VMOS -VMSwitchName $VMSwitchName -VirtualizationServer $VirtualizationServer'
-                Invoke-Expression $Save
-                Write-Host " "
-            } Catch {
-                Write-Warning "The configuration haven't been saved "
+                Write-Host "Start config"
+                $ConfigPath = "$MainFolder\VMMonitoring\Configuration.json"
+
+                $Conf = Get-Content $ConfigPath | ConvertFrom-Json
+                $VMId = (Get-VM -Name $VMName -ComputerName $VirtualizationServer).Id 
+
+                Update-MonitoringMode -VMId  $VMId -isMonitored $False -ServerName $VirtualizationServer
+            }
+
+            Catch {
+                Write-Host "Failed to register configuration data"
             }
         } 
         
@@ -202,7 +148,7 @@ Function Add-NewVM {
             Write-Host "(x) Deployment failed" -ForegroundColor Red
         }
 
-        Return $VMId
+        Return "Id: $VMId"
     }
 }
 
@@ -226,6 +172,10 @@ Function Uninstall-VM {
 
             $VMToDelete | Remove-VM -Force
 
+            $Config = Get-Content -Path "$MainFolder\VMMonitoring\Configuration.json" | ConvertFrom-Json
+
+            $Config.PsObject.Members.Remove($VMId) | ConvertTo-Json | Out-File $Config
+
             If((Get-VM -Id $VMId -ComputerName $VirtulizationServer)) {
                 Write-Error "VM $VMName have not been deleted"
             } Else {
@@ -237,7 +187,7 @@ Function Uninstall-VM {
     }
 }
 
-Function Check-ApplicationUserExist {
+Function Find-ApplicationUserExist {
     Param(
         [Parameter(Mandatory)]
         [String]$Name,
@@ -247,8 +197,9 @@ Function Check-ApplicationUserExist {
 
     Process {
         $Filter = "Name -like "+"`"$Name $Lastname`""
-        
-        If(Get-ADUser -Filter $Filter) {
+        $UserPermissions = Get-ADUser -Filter $Filter
+
+        If($UserPermissions) {
             Write-Host "User: $Name $Lastname found !"
             Return $true
         } Else {
@@ -258,4 +209,39 @@ Function Check-ApplicationUserExist {
     }
 }
 
-Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso, Check-ApplicationUserExist
+Function Get-ApplicationUserPermissions {
+    Param(
+        [Parameter(Mandatory)]
+        [String]$Name,
+        [Parameter(Mandatory)]
+        [String]$Lastname 
+    )
+
+    Process  {
+        $Filter = "Name -like "+"`"$Name $Lastname`""
+        $UserPermissions = Get-ADUser -Filter $Filter -Properties MemberOf
+
+        $Permissions = @{}
+
+        $i = 0
+
+        ($UserPermissions | Select-Object MemberOf).MemberOf | ForEach-Object {
+            $i++
+            $item = "Ressource$i"
+
+            Foreach($obj in $_) {
+                $_ = $_.split(",")
+                $_ = $_.replace('CN=',"")
+
+                If($_ -match '\wVIRTUALIZATION') {
+                    $Permissions.$item += $_[0]
+                }
+            }
+        }
+
+        $Permissions = $Permissions | ConvertTo-Json
+        Return $Permissions
+    }
+}
+
+Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso, Find-ApplicationUserExist, Get-ApplicationUserPermissions

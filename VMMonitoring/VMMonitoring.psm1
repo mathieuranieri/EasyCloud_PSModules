@@ -1,119 +1,77 @@
-﻿﻿Function Get-VMStatus {
+$ConfPath = $PSScriptRoot+"\Configuration.json"
+
+If((Test-Path $ConfPath) -eq $False) {
+    New-Item -Path $ConfPath -ItemType File
+    $json = "{
+
+}" | Out-File $ConfPath
+}
+
+Function Get-MonitoringMode {
     Param(
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory)]
         $VMId
     )
 
     Process {
-        Get-VMConnectAccess -VMId a155224c-466a-4096-856d-960eb3595480 -ComputerName VMSRV01
-       
-
-        Return $IsMonitored
+        $Data = Get-Content $ConfPath | ConvertFrom-Json
+        Return $Data.$VMId
     }
 }
 
-Function Enable-VMMonitoring {
+Function Update-MonitoringMode {
     Param(
-        [Parameter(Mandatory=$True)]
-        $VMName
+        [Parameter(Mandatory)]
+        $VMId,
+        [Parameter(Mandatory)]
+        [ValidateSet($false, $true, 0, 1)]
+        $isMonitored,
+        [Parameter(Mandatory)]
+        $ServerName
     )
 
-    Begin {
-        $Error.Clear()
-        If((Read-MonitoringMode -VMList (Get-VM).Name) -eq "Off") {
-            Write-Host "Global Monitoring mode is set to OFF, if you want to use it on all Virtual Machine set it to ON" -ForegroundColor Yellow
-            Break;
-        }
-    }
+    Process { 
+        $VMName = (Get-VM -Id $VMId -ComputerName $ServerName).Name
+        $Data = Get-Content $ConfPath | ConvertFrom-Json
 
-    Process {
-        $Answer = Read-Host "Do you want enable monitoring for the Virtual Machine: $VMName ? (Y/N)"
-        If($Answer -eq "Y") {
-            Enable-VMResourceMetering -VMName $VMName
-            Clear-Host;
-
-            If($Error) {
-                Write-Host "An error occurred during monitoring activation for $VMName"
-                Break;
-            } Else {
-                Write-Host "Monitoring have been enabled for Virtual Machine: $VMName" -ForegroundColor Green
-                Read-MonitoringMode -VMList (Get-VM).Name
-            }
-            
+        If($null -ne $Data.$VMId) {
+            $Data.$VMId = $isMonitored
         } Else {
-            Write-Warning "Monitoring won't be activated for Virtual Machine: $VMName"
+            $Data | Add-Member  @{$VMId = $isMonitored}
         }
-    }
-}
 
-Function Disable-VMMonitoring {
-    Param(
-        [Parameter(Mandatory=$True)]
-        $VMName
-    )
-
-    Begin {
-        $Error.Clear()
-        If((Read-MonitoringMode -VMList (Get-VM).Name) -eq "Off") {
-            Write-Host "Global Monitoring mode is set to OFF, if you want to use it on all Virtual Machine set it to ON" -ForegroundColor Yellow
-            Break;
+        If($Data.$VMId) {
+            Enable-VMResourceMetering -VMName $VMName -ComputerName $ServerName
+        } 
+        
+        Else {
+            Disable-VMResourceMetering -VMName $VMName -ComputerName $ServerName
         }
-    }
 
-    Process {
-        $Answer = Read-Host "Do you want disable monitoring for the Virtual Machine: $VMName ? (Y/N)"
-        If($Answer -eq "Y") {
-            Disable-VMResourceMetering -VMName $VMName
-            Clear-Host;
-
-            If($Error) {
-                Write-Host "An error occurred during monitoring disabling for $VMName"
-                Break;
-            } Else {
-                Write-Host "Monitoring have been disabled for Virtual Machine: $VMName" -ForegroundColor Green
-                Read-MonitoringMode -VMList (Get-VM).Name
-            }
-            
-        } Else {
-            Write-Warning "Monitoring won't be disabled for Virtual Machine: $VMName"
-        }
+        $Data | ConvertTo-Json | Out-File $ConfPath
     }
 }
 
 Function Get-MonitoringData {
     Param(
-        [Parameter(Mandatory=$True)]
-        $VMList
+        [Parameter(Mandatory)]
+        $VMId,
+        [Parameter(Mandatory)]
+        $ServerName
     )
 
-    Begin {
-        $VMListToMonitor = @()
-
-        $VMList | ForEach-Object {
-            If($_.isMonitored -eq $True) {
-                $VMListToMonitor += $_.VMName
-            }
-        }
-    }
-
     Process {
-        Write-Host "Test"
-        $VMListToMonitor | ForEach-Object {
-           Measure-VM -Name $_ | ConvertTo-Json | Add-Content -Path "F:\ESTIAM\M1 - ESTIAM\PIM\Scripts\App\PSScripts\MonitoringData_$_.json"
+        $Config = Get-Content $ConfPath | ConvertFrom-Json
+        $VMName = (Get-VM -Id $VMId -ComputerName $ServerName).Name 
+
+        If($Config.$VMId) {
+            Return (Measure-VM -VMName $VMName -ComputerName $ServerName | Select-Object VMName, AvgRam, VMId, AvgCPU, TotalDisk | ConvertTo-Json)
+        }
+
+        Else {
+            Return "Monitoring disabled"
         }
     }
 }
 
-Function Use-Monitoring {
-    $isEnabled = Read-Host "Monitoring mode (ON/OFF)"
-
-    If($isEnabled -eq "On") {
-        Write-Host "Monitoring is enabled" -ForegroundColor Green
-        @{MonitoringMode = $True} | ConvertTo-Json | Out-File "F:\ESTIAM\M1 - ESTIAM\PIM\Scripts\App\PSScripts\MonitoringInfo.json"
-    } ElseIf($isEnabled -eq "OFF") {
-        Write-Host "Monitoring is disabled" -ForegroundColor Green
-        @{MonitoringMode = $False} | ConvertTo-Json | Out-File "F:\ESTIAM\M1 - ESTIAM\PIM\Scripts\App\PSScripts\MonitoringInfo.json"
-    }
-}
-
-Export-ModuleMember -Function Use-Monitoring, Get-MonitoringData, Disable-VMMonitoring, Enable-VMMonitoring, Read-MonitoringMode
+Export-ModuleMember -Function Update-MonitoringMode, Get-MonitoringData, Get-MonitoringMode
