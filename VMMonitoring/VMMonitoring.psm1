@@ -10,17 +10,17 @@ If((Test-Path $ConfPath) -eq $False) {
 Function Get-MonitoringMode {
     <#
         .SYNOPSIS
-            Return if monitoring is enabled or not
+            Tells if monitoring is enabled or not
         .EXAMPLE
-            Get-MonitoringMode -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980
+            Get-MonitoringMode -VMId <String>
         .INPUTS
-            String
+            ID of a virtual machine
         .OUTPUTS
-            Boolean
+            Monitoring value as true or false
         .NOTES
             Function called on virtual machine details page on app
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmdeployment
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmmonitoring
     #>
     Param(
         [Parameter(Mandatory)]
@@ -34,6 +34,22 @@ Function Get-MonitoringMode {
 }
 
 Function Update-MonitoringMode {
+    <#
+        .SYNOPSIS
+            Change monitoring mode to true or false and return confirmation
+        .EXAMPLE
+            Update-MonitoringMode -VMId <String> -isMonitored <Boolean> -ServerName <String>
+        .INPUTS
+            ID of a virtual machine
+            Monitoring value as true or false
+            Name  of a virtualization server
+        .OUTPUTS
+            Confirmation message
+        .NOTES
+            Function called on virtual machine details page on app when button monitoring on/off is activated
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmmonitoring
+    #>
     Param(
         [Parameter(Mandatory)]
         $VMId,
@@ -69,6 +85,21 @@ Function Update-MonitoringMode {
 }
 
 Function Get-MonitoringData {
+    <#
+        .SYNOPSIS
+            Retrieving monitoring data (CPU, RAM, Disk) to display in app graph
+        .EXAMPLE
+            Get-MonitoringData -VMId <String> -ServerName <String>
+        .INPUTS
+            ID of a virtual machine
+            Name  of a virtualization server
+        .OUTPUTS
+            String data formated into JSON
+        .NOTES
+            Function called every n seconds when on virtual machine details page and monitoring is activated
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmmonitoring
+    #>
     Param(
         [Parameter(Mandatory)]
         $VMId,

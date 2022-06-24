@@ -3,6 +3,21 @@
 $Global:DiskPath = "F:\ESTIAM\M1 - ESTIAM\PIM\EasyCloud\VM_HardDrive"
 
 Function Update-VMMemory {
+    <#
+        .SYNOPSIS
+            Change memory allocated on a virtual machine
+        .EXAMPLE
+            Update-VMMemory -VMId <String> -NewVMRam <Int32>
+        .INPUTS
+            VirtuaMachine id
+            VirtualMachine new allocated memory
+        .OUTPUTS
+            Confirmation message
+        .NOTES
+            Function called when settings form is commited
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+    #>
     Param(
         [Parameter(mandatory=$true)]
         [String]$VMId,
@@ -30,6 +45,21 @@ Function Update-VMMemory {
 }
 
 Function Update-VMVCPU {
+    <#
+        .SYNOPSIS
+            Change number of virtual cpu allocated on a virtual machine
+        .EXAMPLE
+            Update-VMVCPU -VMId <String> -NewVMVCPU <Int32>
+        .INPUTS
+            VirtuaMachine id
+            VirtualMachine new number of vcpu
+        .OUTPUTS
+            Confirmation message
+        .NOTES
+            Function called when settings form is commited
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+    #>
     Param(
         [Parameter(mandatory=$true)]
         [String]$VMId,
@@ -56,6 +86,22 @@ Function Update-VMVCPU {
 }
 
 Function Add-VMDisk {
+    <#
+        .SYNOPSIS
+            Add a new disk for a virtual machine
+        .EXAMPLE
+            Add-VMDisk -VMId <String> -VMDiskName <String> -VMDiskSize <Int32>
+        .INPUTS
+            VirtuaMachine id
+            New disk name
+            New disk size
+        .OUTPUTS
+            Confirmation message
+        .NOTES
+            Function called when settings form is commited
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+    #>
    Param(
         [Parameter(mandatory=$true)]
         [String]$VMId,
@@ -96,6 +142,21 @@ Function Add-VMDisk {
 }
 
 Function Dismount-VMDisk {
+    <#
+        .SYNOPSIS
+            Delete a disk for a virtual machine
+        .EXAMPLE
+            Dismount-VMDisk -VMId <String> -VMDiskName <String>
+        .INPUTS
+            VirtuaMachine id
+            Disk name
+        .OUTPUTS
+            Confirmation message
+        .NOTES
+            Function called when settings form is commited
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+    #>
    Param(
         [Parameter(mandatory=$true)]
         [String]$VMId,

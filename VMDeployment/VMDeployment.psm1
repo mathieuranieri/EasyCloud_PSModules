@@ -43,25 +43,58 @@ Function Find-DiskExistence {
 }
 
 Function Get-AvailableIso {
-        $shareServer = (hostname).ToUpper()
-        $IsoList = @{}
+    <#
+        .SYNOPSIS
+            Retrieve a liste of available ISO
+        .EXAMPLE
+            Get-AvailableIso
+        .INPUTS
+            None
+        .OUTPUTS
+            List of ISO file as string formated into JSON
+        .NOTES
+            Function called on virtual machine creation page
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmdeployment
+    #>
+    $shareServer = (hostname).ToUpper()
+    $IsoList = @{}
 
-        $i = 0
+    $i = 0
 
-        ((ls -Path "\\$shareServer\Iso").Name) | ForEach-Object {
-            $i++
-            $item = "Item$i"
-            $IsoList.$item += @{
-                "Folder" = $shareServer 
-                "Filename" = "$_" }
-        }
+    ((ls -Path "\\$shareServer\Iso").Name) | ForEach-Object {
+        $i++
+        $item = "Item$i"
+        $IsoList.$item += @{
+            "Folder" = $shareServer 
+            "Filename" = "$_" }
+    }
 
-        $IsoList = ConvertTo-Json -InputObject $IsoList
+    $IsoList = ConvertTo-Json -InputObject $IsoList
 
-        Return $IsoList      
+    Return $IsoList      
 }
 
 Function Add-NewVM {
+    <#
+        .SYNOPSIS
+            Create a new virtual machine
+        .EXAMPLE
+            Add-NewVM -VMName <String> -VMRAM <Int32> -VMDiskSize <Int32> -VMOS <String> -VMProcessor <Int32> -VirtualizationServer <String>
+        .INPUTS
+            VirtuaMachine name
+            VirtualMachine allocated memory
+            VirtualMachine default disk size
+            VirtualMachine OS selected
+            VirtualMachine virtual processor number
+            VirutalMachine virtualization server 
+        .OUTPUTS
+            Confirmation message and virtual machine Id
+        .NOTES
+            Function called on virtual machine creation form commited
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmdeployment
+    #>
     Param(
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [String]$VMName,
@@ -153,6 +186,21 @@ Function Add-NewVM {
 }
 
 Function Uninstall-VM {
+    <#
+        .SYNOPSIS
+            Uninstall a virtual machine
+        .EXAMPLE
+            Uninstall-VM -VMId <String> -VirtualizationServer <String>
+        .INPUTS
+            VirtuaMachine id
+            Virtualization server name
+        .OUTPUTS
+            Confirmation message
+        .NOTES
+            Function called on virtual machine creation form commited
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmdeployment
+    #>
     Param(
         [Parameter(Mandatory=$true)]
         [String]$VMId,
