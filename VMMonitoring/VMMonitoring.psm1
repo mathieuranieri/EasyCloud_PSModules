@@ -1,5 +1,7 @@
 $ConfPath = $PSScriptRoot+"\Configuration.json"
 
+
+
 If((Test-Path $ConfPath) -eq $False) {
     New-Item -Path $ConfPath -ItemType File
     $json = "{
