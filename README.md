@@ -92,6 +92,7 @@ Get-Module -Name MyModule
 ```
 
 ### Module description
+---
 To provide the user a module documentation the following command can be used :
 ```powershell
 Get-Help MyModuleFunctions
@@ -123,14 +124,13 @@ It can be configured by adding following comment inside the function to explaine
 ## EasyCloud Modules
 ---
 ### Contextualization
-
 The PowerShell modules for this project are used with a backend server NodeJS. These modules will have for role the management of Virtual Machines on a On-Premise environment, Hyper-V is used as a basis. The functionalities of the modules are the following :
 - Deployment of a virtual machine
 - Monitoring of a virtual machine
 - Configuration of a virtual machine
 
 ### VMDeployment
-
+---
 Module : [VMDeployment.psm1](./VMDeployment/VMDeployment.psm1)
 
 >- Create new virtual machine
@@ -138,7 +138,7 @@ Module : [VMDeployment.psm1](./VMDeployment/VMDeployment.psm1)
 >- Retrieving ISO Files for a virtual machine
 
 ### VMMonitoring
-
+---
 Module : [VMMonitoring.psm1](./VMMonitoring/VMMonitoring.psm1)
 
 >- Define the monitoring status of a virtual machine
@@ -146,7 +146,7 @@ Module : [VMMonitoring.psm1](./VMMonitoring/VMMonitoring.psm1)
 >- Get the moniroting status of a virtual machine
 
 ### VMConfiguration
-
+---
 Module : [VMConfiguration.psm1](./VMConfiguration/VMConfiguration.psm1)
 
 >- Modifying number of virtual processor for a virtual machine
