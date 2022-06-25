@@ -155,11 +155,11 @@ Module : [VMMonitoring.psm1](./VMMonitoring/VMMonitoring.psm1)
 
 Usage :
 ```powershell
-Update-MonitoringMode -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -isMonitored $True -ServerName "VMSRV01"
+Update-MonitoringMode -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -isMonitored $True -VirtualizationServer "VMSRV01"
 #Return confirmation message
 ```
 ```powershell
-Get-MonitoringData -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -ServerName "VMSRV01"
+Get-MonitoringData -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -VirtualizationServer "VMSRV01"
 #Return JSON Data
 ```
 ```powershell
@@ -178,18 +178,18 @@ Module : [VMConfiguration.psm1](./VMConfiguration/VMConfiguration.psm1)
 
 Usage :
 ```powershell
-Update-VMMemory -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -NewVMRam 2GB
+Update-VMMemory -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -NewVMRam 2GB -VirtualizationServer VMSRV01
 #Return confirmation message
 ```
 ```powershell
-Update-VMVCPU  -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -NewVMVCPU 4
+Update-VMVCPU  -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -NewVMVCPU 4 -VirtualizationServer VMSRV01
 #Return confirmation message
 ```
 ```powershell
-Add-VMDisk -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -DiskName "MyDisk" -DiskSize 100GB
+Add-VMDisk -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -DiskName "MyDisk" -DiskSize 100GB -VirtualizationServer VMSRV01
 #Return confirmation message
 ```
 ```powershell
-Dismount-VMDisk -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -DiskName "MyDisk"
+Dismount-VMDisk -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -DiskName "MyDisk" -VirtualizationServer VMSRV01
 #Return confirmation message
 ```
