@@ -2,6 +2,8 @@
 
 > _This repository contains all powershell modules used in EasyCloud Application the modules listed below are used with a Backend Server but they can be used manually_
 
+>Terminal : powershell.exe
+
 
 ## Summary
 ---
@@ -22,7 +24,7 @@
 ### Starting with modules
 ---
 You can chose the name you want for a module. There is few things to take into account that are : 
-- Your module have to be place in a **folder** that have **the same name** of it.
+- Your module have to be placed in a **folder** that have **the same name** of it.
 - Module extension is **.psm1**
 - Module have to be created in dedicated folder, the list can be retrieved with this environment variable : 
 ```powershell
