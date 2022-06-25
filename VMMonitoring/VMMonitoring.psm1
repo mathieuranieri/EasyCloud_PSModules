@@ -41,7 +41,7 @@ Function Update-MonitoringMode {
         .SYNOPSIS
             Change monitoring mode to true or false and return confirmation
         .EXAMPLE
-            Update-MonitoringMode -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -isMonitored $True -ServerName VMSRV01
+            Update-MonitoringMode -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -isMonitored $True -VirtualizationServer VMSRV01
         .INPUTS
             ID of a virtual machine
             Monitoring value as true or false
@@ -63,11 +63,11 @@ Function Update-MonitoringMode {
         [ValidateSet($false, $true, 0, 1)]
         $isMonitored,
         [Parameter(Mandatory)]
-        $ServerName
+        $VirtualizationServer
     )
 
     Process { 
-        $VMName = (Get-VM -Id $VMId -ComputerName $ServerName).Name
+        $VMName = (Get-VM -Id $VMId -ComputerName $VirtualizationServer).Name
         $Data = Get-Content $ConfPath | ConvertFrom-Json
 
         If($null -ne $Data.$VMId) {
@@ -77,11 +77,11 @@ Function Update-MonitoringMode {
         }
 
         If($Data.$VMId) {
-            Enable-VMResourceMetering -VMName $VMName -ComputerName $ServerName
+            Enable-VMResourceMetering -VMName $VMName -ComputerName $VirtualizationServer
         } 
         
         Else {
-            Disable-VMResourceMetering -VMName $VMName -ComputerName $ServerName
+            Disable-VMResourceMetering -VMName $VMName -ComputerName $VirtualizationServer
         }
 
         $Data | ConvertTo-Json | Out-File $ConfPath
@@ -95,7 +95,7 @@ Function Get-MonitoringData {
         .SYNOPSIS
             Retrieving monitoring data (CPU, RAM, Disk) to display in app graph
         .EXAMPLE
-            Get-MonitoringData -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -ServerName VMSRV01
+            Get-MonitoringData -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VirtualizationServer VMSRV01
         .INPUTS
             ID of a virtual machine
             Name  of a virtualization server
@@ -113,15 +113,15 @@ Function Get-MonitoringData {
         [Parameter(Mandatory)]
         $VMId,
         [Parameter(Mandatory)]
-        $ServerName
+        $VirtualizationServer
     )
 
     Process {
         $Config = Get-Content $ConfPath | ConvertFrom-Json
-        $VMName = (Get-VM -Id $VMId -ComputerName $ServerName).Name 
+        $VMName = (Get-VM -Id $VMId -ComputerName $VirtualizationServer).Name 
 
         If($Config.$VMId) {
-            Return (Measure-VM -VMName $VMName -ComputerName $ServerName | Select-Object VMName, AvgRam, VMId, AvgCPU, TotalDisk | ConvertTo-Json)
+            Return (Measure-VM -VMName $VMName -ComputerName $VirtualizationServer | Select-Object VMName, AvgRam, VMId, AvgCPU, TotalDisk | ConvertTo-Json)
         }
 
         Else {
