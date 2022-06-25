@@ -5,7 +5,7 @@ Function Update-VMMemory {
         .SYNOPSIS
             Change memory allocated on a virtual machine
         .EXAMPLE
-            Update-VMMemory -VMId <String> -NewVMRam <Int32> -VirtualizationServerName <String>
+            Update-VMMemory -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -NewVMRam 2GB -VirtualizationServerName VMSRV01
         .INPUTS
             VirtuaMachine id
             VirtualMachine new allocated memory
@@ -52,7 +52,7 @@ Function Update-VMVCPU {
         .SYNOPSIS
             Change number of virtual cpu allocated on a virtual machine
         .EXAMPLE
-            Update-VMVCPU -VMId <String> -NewVMVCPU <Int32> -VirtualizationServerName <String>
+            Update-VMVCPU -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -NewVMVCPU 2 -VirtualizationServerName VMSRV01
         .INPUTS
             VirtuaMachine id
             VirtualMachine new number of vcpu
@@ -106,11 +106,12 @@ Function Add-VMDisk {
         .SYNOPSIS
             Add a new disk for a virtual machine
         .EXAMPLE
-            Add-VMDisk -VMId <String> -VMDiskName <String> -VMDiskSize <Int32>
+            Add-VMDisk -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VMDiskName "Disk01" -VMDiskSize 30GB -VirtualizationServerName VMSRV01
         .INPUTS
             VirtuaMachine id
             New disk name
             New disk size
+            Virtualization server name
         .OUTPUTS
             Confirmation message
         .DESCRIPTION
@@ -169,7 +170,7 @@ Function Dismount-VMDisk {
         .SYNOPSIS
             Delete a disk for a virtual machine
         .EXAMPLE
-            Dismount-VMDisk -VMId <String> -VMDiskName <String>
+            Dismount-VMDisk -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VMDiskName "Disk01" -VirtualizationServerName VMSRV01
         .INPUTS
             VirtuaMachine id
             Disk name

@@ -83,7 +83,7 @@ Function Add-NewVM {
         .SYNOPSIS
             Create a new virtual machine
         .EXAMPLE
-            Add-NewVM -VMName <String> -VMRAM <Int32> -VMDiskSize <Int32> -VMOS <String> -VMProcessor <Int32> -VirtualizationServer <String>
+            Add-NewVM -VMName MyVM01 -VMRAM 2GB -VMDiskSize 50GB -VMOS "\\EASYCLOUD-APP\Iso\Windows2019.iso" -VMProcessor 2 -VirtualizationServer VMSRV01
         .INPUTS
             VirtuaMachine name
             VirtualMachine allocated memory
@@ -105,9 +105,9 @@ Function Add-NewVM {
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [String]$VMName,
         [Parameter(Mandatory=$true)]
-        [String]$VMRam,
+        $VMRam,
         [Parameter(Mandatory=$true)]
-        [String]$VMDiskSize,
+        $VMDiskSize,
         [Parameter(Mandatory=$true)]
         [String]$VMOS,
         [Parameter(Mandatory=$true)]
@@ -196,7 +196,7 @@ Function Uninstall-VM {
         .SYNOPSIS
             Uninstall a virtual machine
         .EXAMPLE
-            Uninstall-VM -VMId <String> -VirtualizationServer <String>
+            Uninstall-VM -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VirtualizationServer VMSRV01
         .INPUTS
             VirtuaMachine id
             Virtualization server name

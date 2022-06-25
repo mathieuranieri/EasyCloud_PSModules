@@ -12,7 +12,7 @@ Function Get-MonitoringMode {
         .SYNOPSIS
             Tells if monitoring is enabled or not
         .EXAMPLE
-            Get-MonitoringMode -VMId <String>
+            Get-MonitoringMode -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980
         .INPUTS
             ID of a virtual machine
         .OUTPUTS
@@ -41,7 +41,7 @@ Function Update-MonitoringMode {
         .SYNOPSIS
             Change monitoring mode to true or false and return confirmation
         .EXAMPLE
-            Update-MonitoringMode -VMId <String> -isMonitored <Boolean> -ServerName <String>
+            Update-MonitoringMode -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -isMonitored $True -ServerName VMSRV01
         .INPUTS
             ID of a virtual machine
             Monitoring value as true or false
@@ -95,7 +95,7 @@ Function Get-MonitoringData {
         .SYNOPSIS
             Retrieving monitoring data (CPU, RAM, Disk) to display in app graph
         .EXAMPLE
-            Get-MonitoringData -VMId <String> -ServerName <String>
+            Get-MonitoringData -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -ServerName VMSRV01
         .INPUTS
             ID of a virtual machine
             Name  of a virtualization server
