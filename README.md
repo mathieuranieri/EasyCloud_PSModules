@@ -1,6 +1,6 @@
 # EasyCloud PowerShell Modules
 
-> _This repository contains all powershell modules used in EasyCloud Application the modules listed below are used with a Backend Server but they can be used manually_
+_This repository contains all powershell modules used in EasyCloud Application the modules listed below are used with a Backend Server but they can be used manually_
 
 >Required : powershell.exe
 
