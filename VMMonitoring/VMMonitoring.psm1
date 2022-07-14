@@ -4,7 +4,7 @@ If((Test-Path $ConfPath) -eq $False) {
     New-Item -Path $ConfPath -ItemType File
     $json = "{
 
-}" | Out-File $ConfPath
+    }" | Out-File $ConfPath
 }
 
 Function Get-MonitoringMode {
