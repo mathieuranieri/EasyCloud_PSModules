@@ -68,6 +68,7 @@ Function Update-VMMemory {
         } 
         
         Catch {
+            $_
             Return "NOK"
         }
     }
@@ -225,7 +226,7 @@ Function Dismount-VMDisk {
             $ControllerValue = Get-VMHardDiskDrive -VMName $VMName -ComputerName $VirtualizationServer | Where-Object Path -eq "$VMDiskPath"
             $ControllerValue | Remove-VMHardDiskDrive
 
-            If($null -eq (Get-VMHardDiskDrive -ComputerName VMSRV01 -VMName MyVM01 | Where-Object Path -eq $VMDiskPath).Path) {
+            If($null -eq ($VM | Get-VMHardDiskDrive | Where-Object Path -eq $VMDiskPath).Path) {
                 Invoke-Command -ComputerName $VirtualizationServer {
                     param($Path)
                     Remove-Item -Path $Path
@@ -245,4 +246,31 @@ Function Dismount-VMDisk {
     }
 }
 
-Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory
+Function Get-VMAttachedDrives {
+    Param(
+        [Parameter(mandatory=$true)]
+        [String]$VMId,
+        [Parameter(mandatory=$true)]
+        [String]$VirtualizationServer
+    )
+
+    Process {
+        $DiskList = New-Object System.Collections.ArrayList
+
+        $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServer
+        $Disk = ($VM | Get-VMHardDiskDrive).Path
+
+        $Disk | ForEach-Object {
+            $DiskList.Add(@{
+                "vmId" = $VMId 
+                "disk" = "$_" 
+            }) | Out-Null    
+        }
+
+        $DiskList = ConvertTo-Json -InputObject $DiskList
+
+        Return $DiskList   
+    }
+}
+
+Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory, Get-VMAttachedDrives
