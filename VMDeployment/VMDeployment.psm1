@@ -301,10 +301,6 @@ Function Uninstall-VM {
 
             $VMToDelete | Remove-VM -Force
 
-            $Config = Get-Content -Path "$MainFolder\VMMonitoring\Configuration.json" | ConvertFrom-Json
-
-            $Config.PsObject.Members.Remove($VMId) | ConvertTo-Json | Out-File $Config
-
             If((Get-VM -Id $VMId -ComputerName $VirtulizationServer)) {
                 Write-Error "VM $VMName have not been deleted"
             } Else {
@@ -316,4 +312,4 @@ Function Uninstall-VM {
     }
 }
 
-Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso, Start-Application, Add-VMConnectionShortcut
+Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso, Start-Application
