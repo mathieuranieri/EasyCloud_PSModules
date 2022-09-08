@@ -1,5 +1,83 @@
 $MainFolder = (Get-Item -Path $PSScriptRoot).Parent.FullName
+$ConfigurationPath = ($MainFolder | Split-Path | Split-Path) + "\Configuration"
+$ApplicationPath = ($MainFolder | Split-Path | Split-Path) + "\App"
 Import-Module VMMonitoring
+
+
+Function Start-Application {
+    Process {
+        $EasyCloudConfig = $ConfigurationPath + "\EasyCloud"
+
+        $AppToStart = @(
+            @{
+                Path = "$ApplicationPath\WebInterface"
+                Command = "ng"
+                Args = "serve"
+                Description = "AngularWebApp"
+                OutPath = "FRONT_DATA.psd1"
+            },
+            @{
+                Path = "$ApplicationPath\BackServer"
+                Command = "node"
+                Args = "."
+                Description = "NodeJsServer"
+                OutPath = "BACK_DATA.psd1"
+            }
+        )
+
+        $AppToStart | ForEach-Object {
+            $webapp = New-Object System.Diagnostics.ProcessStartInfo
+            $webapp.FileName = $_.Command
+            $webapp.Arguments = $_.Args
+            $webapp.WorkingDirectory = $_.Path
+            $webapp.WindowStyle = 'Hidden'
+            $webapp.CreateNoWindow = $True
+
+            $Process = [Diagnostics.Process]::Start($webapp)
+
+            $ProcessName = $Process.ProcessName
+            $ProcessId = $Process.Id
+            $Description = $_.Description
+            $OutPath = $EasyCloudConfig + "\" + $_.OutPath
+
+            "@{
+                ProcessType = '$ProcessName'
+                ProcessName = '$Description'
+                ProcessId = $ProcessId
+            }" | Out-File $OutPath  
+        }
+    }
+}
+
+Function Add-VMConnectionShortcut {
+    Param(
+        [Parameter(Mandatory)]
+        [String]$VirtualizationServerName,
+
+        [Parameter(Mandatory)]
+        [String]$VMId
+    )
+
+    Process {
+        $Path = $MainFolder | Split-Path
+        $Path = "$Path\WebInterface\src\assets\vmconnect-files\$VMId"
+        $Path += ".ps1"
+
+        New-Item -Path $Path -Force | Out-Null
+
+        $Command = "vmconnect $VirtualizationServerName -G $VMId"
+
+        Set-Content -Path $Path -Value $Command | Out-Null
+
+        $Output = $Path | Split-Path 
+        $Output += "\$VMId"
+        $Output += ".exe"
+
+        ps2exe -inputFile $Path -outputFile $Output | Out-Null
+
+        Remove-Item -Path $Path | Out-Null
+    }
+}
 
 Function Get-VMDeploymentPath {
     $Path = (Get-Module VMDeployment).Path
@@ -61,16 +139,17 @@ Function Get-AvailableIso {
             https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmdeployment
     #>
     $shareServer = (hostname).ToUpper()
-    $IsoList = @{}
+    $IsoList = New-Object System.Collections.ArrayList
 
     $i = 0
 
     ((ls -Path "\\$shareServer\Iso").Name) | ForEach-Object {
-        $i++
-        $item = "Item$i"
-        $IsoList.$item += @{
-            "Folder" = $shareServer 
-            "Filename" = "$_" }
+        If($_ -match ('.iso')) {
+            $IsoList.Add(@{
+                "Folder" = $shareServer 
+                "Filename" = "$_" 
+            }) | Out-Null
+        }
     }
 
     $IsoList = ConvertTo-Json -InputObject $IsoList
@@ -153,6 +232,7 @@ Function Add-NewVM {
             Invoke-Expression $Command
 
             Try {
+                Write-Host "Add-VMDvdDrive -VMName $VMName -Path "$VMOS" -ComputerName $VirtualizationServer"
                 Add-VMDvdDrive -VMName $VMName -Path "$VMOS" -ComputerName $VirtualizationServer
                 Set-VMProcessor $VMName -Count $VMProcessor -ComputerName $VirtualizationServer
                 Write-Host "(/) Sucessful verification" -ForegroundColor Green
@@ -186,6 +266,8 @@ Function Add-NewVM {
             Write-Warning "An error occured in the execution"
             Write-Host "(x) Deployment failed" -ForegroundColor Red
         }
+
+        Add-VMConnectionShortcut -VirtualizationServerName $VirtualizationServer  -VMId $VMId
 
         Return "Id: $VMId"
     }
@@ -244,4 +326,4 @@ Function Uninstall-VM {
     }
 }
 
-Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso
+Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso, Start-Application, Add-VMConnectionShortcut
