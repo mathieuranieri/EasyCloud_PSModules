@@ -1,5 +1,35 @@
 ﻿
-Clear-Host;
+Function Set-VMStatus {
+    Param(
+        [Parameter(Mandatory)]
+        [String]$VMId,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('ON', 'OFF')]
+        [String]$VMStatus,
+
+        [Parameter(Mandatory)]
+        [String]$VirtualizationServerName
+    )
+
+    Process {
+        Try {
+            If($VMStatus -eq 'ON') {
+                Get-VM -ComputerName $VirtualizationServerName -Id $VMId | Start-VM
+                Return 'ON'
+            }
+
+            ElseIf($VMStatus -eq 'OFF') {
+                Get-VM -ComputerName $VirtualizationServerName -Id $VMId | Stop-VM
+                Return 'OFF'
+            }
+        }
+
+        Catch {
+            Return 'NOK'
+        }
+    }
+}
 
 Function Update-VMMemory {
     <#
@@ -25,25 +55,20 @@ Function Update-VMMemory {
         [Parameter(mandatory=$true)]
         [String]$VMId,
         [Parameter(mandatory=$true)]
-        [String]$NewVMRam,
+        $NewVMRam,
         [Parameter(mandatory=$true)]
         [String]$VirtualizationServer
     )
 
-    Begin {
-        Write-Host "(i) Modification of the number of RAM allocated..." -ForegroundColor Cyan
-    }
-
     Process {
         Try {
             $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServer
-            $VMName = $VM.Name
-            Set-VMMemory -VMName $VMName -StartupBytes $NewVMRam -ComputerName $VirtualizationServer
-            Return "(/) Memory have been set to: $NewVMRam for $VMName"
+            $VM | Set-VMMemory -StartupBytes $NewVMRam
+            Return "OK"
         } 
         
         Catch {
-            Return "(x) An error occured, memory haven't been changed"
+            Return "NOK"
         }
     }
 }
@@ -77,27 +102,21 @@ Function Update-VMVCPU {
         [String]$VirtualizationServer
     )
 
-    Begin {
-        Write-Host "(i) Readjustment of the number of VCPU..." -ForegroundColor Cyan
-    }
-
     Process {
         Try {
             $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServer
-            $VMName = $VM.Name
-
             $Cores = (Get-WmiObject -Class WIn32_Processor).NumberOfLogicalProcessors
 
             If($NewVMVCPU -gt ($Cores / 2)) {
-                Return "(x) Number of cores specified is too much, number of VCPU haven't been changed"
+                Return "LIMIT"
             }
 
-            Set-VMProcessor -VMName $VMName -Count $NewVMVCPU -ComputerName $VirtualizationServer
-            Return "(/) Number of VCPU have been set to: $NewVMVCPU for $VMName"
+            $VM | Set-VMProcessor -Count $NewVMVCPU
+            Return "OK"
         } 
         
         Catch {
-            Return "(x) An error occured, number of VCPU haven't been changed"
+            Return "NOK"
         }
     }
 }
@@ -129,13 +148,12 @@ Function Add-VMDisk {
         [Parameter(mandatory=$true)]
         [String]$VMDiskName,
         [Parameter(mandatory=$true)]
-        $DiskSize,
+        [UInt64]$DiskSize,
         [Parameter(mandatory=$true)]
         [String]$VirtualizationServer
     )
 
     Begin {
-        Write-Host "(i) Disk will be created ..." -ForegroundColor Cyan
         $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServer
         $VMName = $VM.Name
         $DiskName = $VMDiskName+".vhdx"
@@ -144,24 +162,25 @@ Function Add-VMDisk {
     Process {
         Try {
             $DiskPath = "C:\EasyCloud\VirtualMachines\Disk\$DiskName"
-            Write-Host "New-VHD -Path $DiskPath -SizeBytes $DiskSize -ComputerName $VirtualizationServer"
             New-VHD -Path $DiskPath -SizeBytes $DiskSize -ComputerName $VirtualizationServer | Out-Null
             Add-VMHardDiskDrive -VMName $VMName -ControllerType SCSI -ControllerNumber 0 -Path $DiskPath -ComputerName $VirtualizationServer
 
-            If((Get-VMHardDiskDrive -ComputerName VMSRV01 -VMName MyVM01).Path -eq $DiskPath) {
-                Return "(/) Disk have been created"
+            If(($VM | Get-VMHardDiskDrive).Path -eq $DiskPath) {
+                Return "OK"
             } Else {
                 Invoke-Command -ComputerName $VirtualizationServer {
                     param($Path)
                     Remove-Item -Path $Path
                 } -ArgumentList $DiskPath
 
-                Return "(x) An error occured, disk size haven't been created"
+                Write-Host 'Test'
+                Return "NOK"
             }
         }
 
         Catch {
-            Return "(x) An error occured, disk size haven't been created"
+            $_
+            Return "NOK"
         }
     }
 }
@@ -196,7 +215,6 @@ Function Dismount-VMDisk {
     )
 
     Begin {
-        Write-Host "(i) Disk will be removed from the VM ..." -ForegroundColor Cyan
         $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServer
         $VMName = $VM.Name
     }
@@ -213,16 +231,16 @@ Function Dismount-VMDisk {
                     Remove-Item -Path $Path
                 } -ArgumentList $VMDiskPath
 
-                Return "(/) Disk $VMDiskName have been removed from the VM $VMName" 
+                Return "OK" 
             }
 
             Else {
-                Return "(x) An error occured, the disk haven't been removed from the VM"
+                Return "NOK"
             }
         }
 
         Catch {
-            Return "(x) An error occured, the disk haven't been removed from the VM"
+            Return "NOK"
         }
     }
 }
