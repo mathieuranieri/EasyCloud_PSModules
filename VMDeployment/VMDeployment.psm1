@@ -49,47 +49,6 @@ Function Start-Application {
     }
 }
 
-Function Register-AppShortcut {
-    Param (
-        [Parameter(Mandatory)]
-        $ShPath,
-        [Parameter(Mandatory)]
-        $ShTargetPath,
-        [Parameter()]
-        $ShArguments,
-        [Parameter()]
-        $IconPath,
-        [Parameter()]
-        $ShWorkingDirPath = ""
-    )
-
-    Process {
-        Write-Host "`nCreating launch icon..." -ForegroundColor Cyan 
-        $ShPath = $ShPath.replace(" ", "")
-        $ShWorkingDirPath = $ShWorkingDirPath.replace(" ", "")
-        
-        $Shell = New-Object -ComObject ("WScript.Shell")
-        $Shortcut = $Shell.CreateShortcut($ShPath)
-
-        $Shortcut.TargetPath = $ShTargetPath
-
-        If($IconPath) {
-            $Shortcut.IconLocation = $IconPath.replace(" ", "")
-        }
-
-        If($ShWorkingDirPath) {
-            $Shortcut.WorkingDirectory = $ShWorkingDirPath
-        }
-
-        If($ShArguments) {
-            $Shortcut.Arguments = $ShArguments
-        }
-
-        $Shortcut.Save()
-        Write-Host "Successfully created" -ForegroundColor Green
-    }
-}
-
 Function Add-VMConnectionShortcut {
     Param(
         [Parameter(Mandatory)]
@@ -102,11 +61,11 @@ Function Add-VMConnectionShortcut {
     Process {
         $Path = $MainFolder | Split-Path
         $Path = "$Path\WebInterface\src\assets\vmconnect-files\$VMId"
-        $Path += ".lnk"
+        $Path += ".bat"
 
         $Command = "vmconnect $VirtualizationServerName -G $VMId"
 
-        Register-AppShortcut -ShPath $Path -ShTargetPath 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' -ShArguments "-WindowStyle Hidden -Command $Command"
+        New-Item -Path $Path -Value $Command
     }
 }
 
