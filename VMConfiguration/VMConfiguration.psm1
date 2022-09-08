@@ -1,4 +1,5 @@
-﻿Clear-Host;
+﻿
+Clear-Host;
 
 Function Update-VMMemory {
     <#
