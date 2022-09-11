@@ -1,3 +1,4 @@
+
 $ConfPath = $PSScriptRoot+"\Configuration.json"
 
 If((Test-Path $ConfPath) -eq $False) {
