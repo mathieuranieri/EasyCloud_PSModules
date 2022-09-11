@@ -1,8 +1,8 @@
+
 $MainFolder = (Get-Item -Path $PSScriptRoot).Parent.FullName
 $ConfigurationPath = ($MainFolder | Split-Path | Split-Path) + "\Configuration"
 $ApplicationPath = ($MainFolder | Split-Path | Split-Path) + "\App"
 Import-Module VMMonitoring
-
 
 Function Start-Application {
     Process {
@@ -65,7 +65,7 @@ Function Add-VMConnectionShortcut {
 
         $Command = "vmconnect $VirtualizationServerName -G $VMId"
 
-        New-Item -Path $Path -Value $Command
+        New-Item -Path $Path -Value $Command | Out-Null
     }
 }
 
@@ -97,10 +97,9 @@ Function Find-DiskExistence {
     )
 
     Process {
-        $DiskList = Invoke-Command -ScriptBlock {ls -Path "C:\EasyCloud\VirtualMachines\Disk\" | Select-Object Name | Where-Object Name -like "$VMDisk"} -ComputerName $VirtualizationServerName
+        $DiskList = Invoke-Command -ScriptBlock {ls -Path "C:\EasyCloud\VirtualMachines\Disk\" | Select-Object Name | Where-Object Name -match "$VMDisk"} -ComputerName $VirtualizationServerName
 
-        If($null -eq $DiskList) {
-            Write-Host "Deployment of a new virtual machine started..." -ForegroundColor Cyan
+        If($DiskList.Lenght -ne 0) {
             Return $VMDisk
         }
 
@@ -191,6 +190,9 @@ Function Add-NewVM {
 
     Process {
         Try {
+            $Output = New-Object System.Collections.ArrayList
+            $LogOutput = New-Object System.Collections.ArrayList
+
             $VMDisk = "$VMName" + ".vhdx"
             $VMDiskPath = "C:\EasyCloud\VirtualMachines\Disk\$VMDisk"
             $DiskChecker = Find-DiskExistence -VMDisk $VMDisk -VirtualizationServerName $VirtualizationServer
@@ -200,66 +202,116 @@ Function Add-NewVM {
             $MachineCores = (Get-WmiObject Win32_processor -ComputerName $VirtualizationServer | Select-Object NumberOfLogicalProcessors)
 
             If($DiskChecker -eq "NA") {
-                Write-Error "Disk with same name already exist"
-                Write-Host "(x) Deployment failed" -ForegroundColor Red
-                Break;
+                $LogOutput.Add(@{
+                    Step = 1
+                    Message = "Disk with same name already exist"
+                    Status = "NOK"
+                }) | Out-Null
+
+                Return $LogOutput | ConvertTo-Json
+            }
+
+            Else {
+                $LogOutput.Add(@{
+                    Step = 1
+                    Message = "Disk path is correct"
+                    Status = "OK"
+                }) | Out-Null
             }
 
             If($VMProcessor -gt $MachineCores.NumberOfLogicalProcessors) {
-                Write-Error "Number of virtual cores attributed are outpassing physical server number"
-                Write-Host "(x) Deployment failed" -ForegroundColor Red
-                Break;
+                $LogOutput.Add(@{
+                    Step = 2
+                    Message = "Number of virtual cores attributed are outpassing physical server number"
+                    Status = "NOK"
+                }) | Out-Null
+                
+                Return $LogOutput | ConvertTo-Json
+            }
+
+            Else {
+                $LogOutput.Add(@{
+                    Step = 2
+                    Message = "Number of virtual cores have been attributed"
+                    Status = "OK"
+                }) | Out-Null
             }
 
             If(Get-VMSwitch -ComputerName $VirtualizationServer | Where-Object Name -like InternalSwitch) {
-                Write-Host "InternalSwitch exist" -ForegroundColor Green
+                $LogOutput.Add(@{
+                    Step = 3
+                    Message = "Switch already exist, it will be used"
+                    Status = "OK"
+                }) | Out-Null
             } Else {
                 New-VMSwitch -name 'InternalSwitch' -NetAdapterName Ethernet -AllowManagementOS $true -ComputerName $VirtualizationServer
             }
 
             $Command = "New-VM -Name $VMName -ComputerName $VirtualizationServer -MemoryStartupBytes $VMRam -NewVHDPath '$VMDiskPath' -NewVHDSizeBytes $VMDiskSize -Path "+ "'$VMPath' " + "-Generation $VMGeneration -SwitchName '$VMSwitchName'"
 
-            Invoke-Expression $Command
+            Invoke-Expression $Command | Out-Null
 
             Try {
-                Write-Host "Add-VMDvdDrive -VMName $VMName -Path "$VMOS" -ComputerName $VirtualizationServer"
                 Add-VMDvdDrive -VMName $VMName -Path "$VMOS" -ComputerName $VirtualizationServer
                 Set-VMProcessor $VMName -Count $VMProcessor -ComputerName $VirtualizationServer
-                Write-Host "(/) Sucessful verification" -ForegroundColor Green
+                
+                $LogOutput.Add(@{
+                    Step = 4
+                    Message = "Successfull Verification"
+                    Status = "OK"
+                }) | Out-Null
             } 
             
             Catch {
-                Write-Warning "(x) Verification failed"
-                Break;
+                $LogOutput.Add(@{
+                    Step = 4
+                    Message = "Verification Failed"
+                    Status = "NOK"
+                }) | Out-Null
+
+                Return $LogOutput | ConvertTo-Json
             }
 
-            Write-Host "(/) Sucessful deployment" -ForegroundColor Green
+            $LogOutput.Add(@{
+                Step = 5
+                Message = "Sucessful VM creation"
+                Status = "OK"
+            }) | Out-Null
             
             $VMId = (Get-VM -Name $VMName -ComputerName $VirtualizationServer).Id
 
-            Try {
-                Write-Host "Start config"
-                $ConfigPath = "$MainFolder\VMMonitoring\Configuration.json"
+            # Try {
+            #     Write-Host "Start config"
+            #     $ConfigPath = "$MainFolder\VMMonitoring\Configuration.json"
 
-                $Conf = Get-Content $ConfigPath | ConvertFrom-Json
-                $VMId = (Get-VM -Name $VMName -ComputerName $VirtualizationServer).Id 
+            #     $Conf = Get-Content $ConfigPath | ConvertFrom-Json
+            #     $VMId = (Get-VM -Name $VMName -ComputerName $VirtualizationServer).Id 
 
-                Update-MonitoringMode -VMId  $VMId -isMonitored $False -ServerName $VirtualizationServer
-            }
+            #     Update-MonitoringMode -VMId  $VMId -isMonitored $False -ServerName $VirtualizationServer
+            # }
 
-            Catch {
-                Write-Host "Failed to register configuration data"
-            }
+            # Catch {
+            #     Write-Host "Failed to register configuration data"
+            # }
         } 
         
         Catch {
-            Write-Warning "An error occured in the execution"
-            Write-Host "(x) Deployment failed" -ForegroundColor Red
+            $LogOutput.Add(@{
+                Message = "An error occured during execution"
+                Status = "NOK"
+            }) | Out-Null
+
+            Return $LogOutput | ConvertTo-Json
         }
 
         Add-VMConnectionShortcut -VirtualizationServerName $VirtualizationServer  -VMId $VMId
 
-        Return "Id: $VMId"
+        $Output.Add(@{
+            Log = $LogOutput
+            VMId = $VMId
+        }) | Out-Null
+
+        Return $Output | ConvertTo-Json
     }
 }
 
@@ -283,31 +335,71 @@ Function Uninstall-VM {
             https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmdeployment
     #>
     Param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory)]
         [String]$VMId,
-        [Parameter(Mandatory=$true)]
-        [String]$VirtulizationServer
+
+        [Parameter(Mandatory)]
+        [String]$VirtualizationServerName
     )
 
     Process {
         Try {
-            $VMToDelete = (Get-VM -Id $VMId -ComputerName $VirtulizationServer)
-
+            $LogOutput = New-Object System.Collections.ArrayList
+            $VMToDelete = (Get-VM -Id $VMId -ComputerName $VirtualizationServerName)
             $VMName = $VMToDelete.Name
-
             $VMDisk = "C:\EasyCloud\VirtualMachines\Disk\" + "$VMName"+".vhdx"
 
-            Invoke-Command -ScriptBlock {Remove-Item -Path $Using:VMDisk} -ComputerName $VirtulizationServer
-
-            $VMToDelete | Remove-VM -Force
-
-            If((Get-VM -Id $VMId -ComputerName $VirtulizationServer)) {
-                Write-Error "VM $VMName have not been deleted"
-            } Else {
-                Write-Host "Virtual machine have been deleted" -ForegroundColor Green
+            Try {
+                Invoke-Command -ScriptBlock {Remove-Item -Path $Using:VMDisk} -ComputerName $VirtualizationServerName
+                
+                $LogOutput.Add(@{
+                    Step = 1
+                    Message = "VM Disk have been deleted"
+                    Status = 'OK'
+                }) | Out-Null
             }
-        } Catch {
-            Write-Error "A problem occured during the deletion"
+
+            Catch {
+                $LogOutput.Add(@{
+                    Step = 1
+                    Message = "An error occured during VM Disk deletion"
+                    Status = 'NOK'
+                }) | Out-Null
+
+                Return $LogOutput | ConvertTo-Json
+            }
+
+            Try {
+                $VMToDelete | Remove-VM -Force -ErrorAction Stop
+
+                $LogOutput.Add(@{
+                    Step = 2
+                    Message = "VM have been deleted"
+                    Status = 'Ok'
+                }) | Out-Null
+
+            }
+
+            Catch {
+                $LogOutput.Add(@{
+                    Step = 2
+                    Message = "Error occured during VM deletion"
+                    Status = 'NOK'
+                }) | Out-Null
+
+                Return $LogOutput | ConvertTo-Json
+            }
+
+            Return $LogOutput | ConvertTo-Json
+        } 
+        
+        Catch {
+            $LogOutput.Add(@{
+                Message = "An error occured during execution"
+                Status = 'NOK'
+            }) | Out-Null
+
+            Return $LogOutput | ConvertTo-Json
         }
     }
 }

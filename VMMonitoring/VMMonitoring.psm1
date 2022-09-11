@@ -113,15 +113,15 @@ Function Get-MonitoringData {
         [Parameter(Mandatory)]
         $VMId,
         [Parameter(Mandatory)]
-        $VirtualizationServer
+        $VirtualizationServerName
     )
 
     Process {
         $Config = Get-Content $ConfPath | ConvertFrom-Json
-        $VMName = (Get-VM -Id $VMId -ComputerName $VirtualizationServer).Name 
+        $VMName = (Get-VM -Id $VMId -ComputerName $VirtualizationServerName).Name 
 
         If($Config.$VMId) {
-            Return (Measure-VM -VMName $VMName -ComputerName $VirtualizationServer | Select-Object VMName, AvgRam, VMId, AvgCPU, TotalDisk | ConvertTo-Json)
+            Return (Measure-VM -VMName $VMName -ComputerName $VirtualizationServerName | Select-Object VMName, AvgRam, VMId, AvgCPU, TotalDisk | ConvertTo-Json)
         }
 
         Else {

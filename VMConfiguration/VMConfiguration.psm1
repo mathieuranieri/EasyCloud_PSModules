@@ -1,4 +1,37 @@
 ﻿
+Function Convert-Size {            
+    [cmdletbinding()]            
+    Param(            
+        [validateset("Bytes","KB","MB","GB","TB")]            
+        [string]$From,            
+        [validateset("Bytes","KB","MB","GB","TB")]            
+        [string]$To,            
+        [Parameter(Mandatory=$true)]            
+        [double]$Value,            
+        [int]$Precision = 4            
+    )
+
+    Switch($From) {            
+        "Bytes" {$value = $Value }            
+        "KB" {$value = $Value * 1024 }            
+        "MB" {$value = $Value * 1024 * 1024}            
+        "GB" {$value = $Value * 1024 * 1024 * 1024}            
+        "TB" {$value = $Value * 1024 * 1024 * 1024 * 1024}            
+    }            
+                
+    Switch ($To) {            
+        "Bytes" {return $value}            
+        "KB" {$Value = $Value/1KB}            
+        "MB" {$Value = $Value/1MB}            
+        "GB" {$Value = $Value/1GB}            
+        "TB" {$Value = $Value/1TB}            
+                
+    }            
+                
+    return [Math]::Round($value,$Precision,[MidPointRounding]::AwayFromZero)            
+                
+}   
+
 Function Get-VMStatus {
     Param(
         [Parameter(Mandatory)]
@@ -10,10 +43,44 @@ Function Get-VMStatus {
 
     Process {
         Try {
-            Return (Get-VM -ComputerName $VirtualizationServerName -Id $VMId).State
+            $VMStatus = New-Object System.Collections.ArrayList
+
+            $VM = Get-VM -ComputerName $VirtualizationServerName -Id $VMId 
+            $Disk = $VM | Get-VMHardDiskDrive | Get-VHD -ComputerName $VirtualizationServerName #| Select-Object FileSize, Size
+
+            $DiskList = New-Object System.Collections.ArrayList
+
+            $Disk | Foreach-Object {
+                [String]$Size = (Convert-Size -From Bytes -To GB -Value $_.FileSize)
+                [String]$MaxSize = (Convert-Size -From Bytes -To GB -Value $_.Size)
+
+                $Size+="GB"
+                $MaxSize+="GB"
+
+                $DiskList.Add(@{
+                    DiskName = $_.Path | Split-Path -Leaf
+                    Path = $_.Path
+                    Size =  $Size
+                    MaxSize = $MaxSize
+                }) | Out-Null
+            }
+
+            $Processor = $VM.ProcessorCount
+            [String]$Ram = Convert-Size -From Bytes -To GB -Value $VM.MemoryStartup
+
+            $Ram+= "GB"
+
+            $VMStatus.Add(@{
+                Disk = $DiskList
+                Processor = $Processor
+                Ram = $Ram
+            }) | Out-Null
+
+            Return $VMStatus | ConvertTo-Json
         }
 
         Catch {
+            $_
             Return 'NOK'
         }
     }
@@ -35,7 +102,7 @@ Function Set-VMStatus {
     Process {
         Try {
             If($VMStatus -eq 'ON') {
-                Get-VM -ComputerName $VirtualizationServerName -Id $VMId | Start-VM -Force
+                Get-VM -ComputerName $VirtualizationServerName -Id $VMId | Start-VM
                 Return 'ON'
             }
 
@@ -72,17 +139,19 @@ Function Update-VMMemory {
             https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
     #>
     Param(
-        [Parameter(mandatory=$true)]
+        [Parameter(Mandatory)]
         [String]$VMId,
-        [Parameter(mandatory=$true)]
-        $NewVMRam,
-        [Parameter(mandatory=$true)]
-        [String]$VirtualizationServer
+
+        [Parameter(Mandatory)]
+        [UInt64]$NewVMRam,
+
+        [Parameter(Mandatory)]
+        [String]$VirtualizationServerName
     )
 
     Process {
         Try {
-            $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServer
+            $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServerName
             $VM | Set-VMMemory -StartupBytes $NewVMRam
             Return "OK"
         } 
@@ -115,17 +184,19 @@ Function Update-VMVCPU {
             https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
     #>
     Param(
-        [Parameter(mandatory=$true)]
+        [Parameter(Mandatory)]
         [String]$VMId,
-        [Parameter(mandatory=$true)]
+
+        [Parameter(Mandatory)]
         [Int]$NewVMVCPU,
-        [Parameter(mandatory=$true)]
-        [String]$VirtualizationServer
+
+        [Parameter(Mandatory)]
+        [String]$VirtualizationServerName
     )
 
     Process {
         Try {
-            $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServer
+            $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServerName
             $Cores = (Get-WmiObject -Class WIn32_Processor).NumberOfLogicalProcessors
 
             If($NewVMVCPU -gt ($Cores / 2)) {
@@ -138,6 +209,30 @@ Function Update-VMVCPU {
         
         Catch {
             Return "NOK"
+        }
+    }
+}
+
+Function Expand-VMDiskSize {
+    Param (
+        [Parameter(Mandatory)]
+        [String]$DiskPath,
+
+        [Parameter(Mandatory)]
+        [String]$VirtualizationServerName,
+
+        [Parameter(Mandatory)]
+        [UInt64]$SetMaxSize
+    )
+
+    Process {
+        Try {
+            Resize-VHD -Path $DiskPath -ComputerName $VirtualizationServerName -SizeBytes $SetMaxSize -ErrorAction Stop
+            Return 'OK'
+        }
+        
+        Catch {
+            Return 'NOK'
         }
     }
 }
@@ -166,10 +261,13 @@ Function Add-VMDisk {
    Param(
         [Parameter(mandatory=$true)]
         [String]$VMId,
+
         [Parameter(mandatory=$true)]
         [String]$VMDiskName,
+
         [Parameter(mandatory=$true)]
         [UInt64]$DiskSize,
+
         [Parameter(mandatory=$true)]
         [String]$VirtualizationServer
     )
@@ -229,8 +327,10 @@ Function Dismount-VMDisk {
    Param(
         [Parameter(mandatory=$true)]
         [String]$VMId,
+
         [Parameter(mandatory=$true)]
         [String]$VMDiskName,
+
         [Parameter(mandatory=$true)]
         [String]$VirtualizationServer
     )
@@ -270,6 +370,7 @@ Function Get-VMAttachedDrives {
     Param(
         [Parameter(mandatory=$true)]
         [String]$VMId,
+
         [Parameter(mandatory=$true)]
         [String]$VirtualizationServer
     )
@@ -293,4 +394,4 @@ Function Get-VMAttachedDrives {
     }
 }
 
-Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory, Get-VMAttachedDrives, Set-VMStatus, Get-VMStatus 
+Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory, Get-VMAttachedDrives, Set-VMStatus, Get-VMStatus, Expand-VMDiskSize 
