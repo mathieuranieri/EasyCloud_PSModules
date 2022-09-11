@@ -15,12 +15,12 @@ Function Set-VMStatus {
     Process {
         Try {
             If($VMStatus -eq 'ON') {
-                Get-VM -ComputerName $VirtualizationServerName -Id $VMId | Start-VM
+                Get-VM -ComputerName $VirtualizationServerName -Id $VMId | Start-VM -Force
                 Return 'ON'
             }
 
             ElseIf($VMStatus -eq 'OFF') {
-                Get-VM -ComputerName $VirtualizationServerName -Id $VMId | Stop-VM
+                Get-VM -ComputerName $VirtualizationServerName -Id $VMId | Stop-VM -Force
                 Return 'OFF'
             }
         }
@@ -273,4 +273,4 @@ Function Get-VMAttachedDrives {
     }
 }
 
-Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory, Get-VMAttachedDrives
+Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory, Get-VMAttachedDrives, Set-VMStatus
