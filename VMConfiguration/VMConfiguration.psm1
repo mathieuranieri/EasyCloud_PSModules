@@ -1,4 +1,24 @@
 ﻿
+Function Get-VMStatus {
+    Param(
+        [Parameter(Mandatory)]
+        [String]$VMId,
+
+        [Parameter(Mandatory)]
+        [String]$VirtualizationServerName
+    )
+
+    Process {
+        Try {
+            Return (Get-VM -ComputerName $VirtualizationServerName -Id $VMId).State
+        }
+
+        Catch {
+            Return 'NOK'
+        }
+    }
+}
+
 Function Set-VMStatus {
     Param(
         [Parameter(Mandatory)]
@@ -273,4 +293,4 @@ Function Get-VMAttachedDrives {
     }
 }
 
-Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory, Get-VMAttachedDrives, Set-VMStatus
+Export-ModuleMember -Function Dismount-VMDisk, Add-VMDisk, Update-VMVCPU, Update-VMMemory, Get-VMAttachedDrives, Set-VMStatus, Get-VMStatus 
