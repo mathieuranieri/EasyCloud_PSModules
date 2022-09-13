@@ -11,20 +11,15 @@ If((Test-Path $ConfPath) -eq $False) {
 Function Get-MonitoringMode {
     <#
         .SYNOPSIS
-            Tells if monitoring is enabled or not
+            Retrieve the monitoring mode of a virtual machine
         .EXAMPLE
             Get-MonitoringMode -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980
-        .INPUTS
-            ID of a virtual machine
-        .OUTPUTS
-            Monitoring value as true or false
         .DESCRIPTION
-            This function will read the configuration file with the provided virtual machine name
-            and will retrieve the monitoring mode
+            Retrieve the monitoring mode of a virtual machine
         .NOTES
             Function called on virtual machine details page on app
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmmonitoring
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMMonitoring
     #>
     Param(
         [Parameter(Mandatory)]
@@ -55,7 +50,7 @@ Function Update-MonitoringMode {
         .NOTES
             Function called on virtual machine details page on app when button monitoring on/off is activated
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmmonitoring
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMMonitoring
     #>
     Param(
         [Parameter(Mandatory)]
@@ -108,7 +103,7 @@ Function Get-MonitoringData {
         .NOTES
             Function called every n seconds when on virtual machine details page and monitoring is activated
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmmonitoring
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMMonitoring
     #>
     Param(
         [Parameter(Mandatory)]

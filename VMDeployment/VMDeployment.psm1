@@ -4,51 +4,6 @@ $ConfigurationPath = ($MainFolder | Split-Path | Split-Path) + "\Configuration"
 $ApplicationPath = ($MainFolder | Split-Path | Split-Path) + "\App"
 Import-Module VMMonitoring
 
-Function Start-Application {
-    Process {
-        $EasyCloudConfig = $ConfigurationPath + "\EasyCloud"
-
-        $AppToStart = @(
-            @{
-                Path = "$ApplicationPath\WebInterface"
-                Command = "ng"
-                Args = "serve"
-                Description = "AngularWebApp"
-                OutPath = "FRONT_DATA.psd1"
-            },
-            @{
-                Path = "$ApplicationPath\BackServer"
-                Command = "node"
-                Args = "."
-                Description = "NodeJsServer"
-                OutPath = "BACK_DATA.psd1"
-            }
-        )
-
-        $AppToStart | ForEach-Object {
-            $webapp = New-Object System.Diagnostics.ProcessStartInfo
-            $webapp.FileName = $_.Command
-            $webapp.Arguments = $_.Args
-            $webapp.WorkingDirectory = $_.Path
-            $webapp.WindowStyle = 'Hidden'
-            $webapp.CreateNoWindow = $True
-
-            $Process = [Diagnostics.Process]::Start($webapp)
-
-            $ProcessName = $Process.ProcessName
-            $ProcessId = $Process.Id
-            $Description = $_.Description
-            $OutPath = $EasyCloudConfig + "\" + $_.OutPath
-
-            "@{
-                ProcessType = '$ProcessName'
-                ProcessName = '$Description'
-                ProcessId = $ProcessId
-            }" | Out-File $OutPath  
-        }
-    }
-}
-
 Function Add-VMConnectionShortcut {
     Param(
         [Parameter(Mandatory)]
@@ -112,20 +67,22 @@ Function Find-DiskExistence {
 Function Get-AvailableIso {
     <#
         .SYNOPSIS
-            Retrieve a liste of available ISO
-        .EXAMPLE
-            Get-AvailableIso
+            Retrieve the list of available ISO located in "C:\EasyCloud\Configuration\IsoFiles" folders
+        
+        .DESCRIPTION
+            Retrieve the list of available ISO located in "C:\EasyCloud\Configuration\IsoFiles" folders
+
         .INPUTS
             None
+        
         .OUTPUTS
             List of ISO file as string formated into JSON
-        .DESCRIPTION
-            This script will read a shared folder where are stored iso file for the application
-            and will return a list as JSON
-        .NOTES
-            Function called on virtual machine creation page
+        
+        .EXAMPLE
+            PS> Get-AvailableIso
+
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmdeployment
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMDeployment
     #>
     $shareServer = (hostname).ToUpper()
     $IsoList = New-Object System.Collections.ArrayList
@@ -150,37 +107,46 @@ Function Add-NewVM {
     <#
         .SYNOPSIS
             Create a new virtual machine
-        .EXAMPLE
-            Add-NewVM -VMName MyVM01 -VMRAM 2GB -VMDiskSize 50GB -VMOS "\\EASYCLOUD-APP\Iso\Windows2019.iso" -VMProcessor 2 -VirtualizationServer VMSRV01
-        .INPUTS
-            VirtuaMachine name
-            VirtualMachine allocated memory
-            VirtualMachine default disk size
-            VirtualMachine OS selected
-            VirtualMachine virtual processor number
-            VirutalMachine virtualization server 
-        .OUTPUTS
-            Confirmation message and virtual machine Id
+        
         .DESCRIPTION
-            This function will create a new virtual machine step by step by checking many parameters, if disk already exist or if allocated
-            resource are not execeding virtualization server resource. It use new-vm command. 
-        .NOTES
-            Function called on virtual machine creation form commited
+            Create a new virtual machine
+            Take a virtual machine name, allocated RAM, number of v-core attributed, the default disk max size, an iso file path and a virtualization server name
+        
+        .INPUTS
+            VirtualMachine name as pipeline value
+
+        .OUTPUTS
+            Return VM Id and creation steps log else return error logs
+
+        .EXAMPLE
+            PS> Add-NewVM -VMName MyVM01 -VMRAM 2GB -VMDiskSize 50GB -VMOS "\\EASYCLOUD-APP\Iso\Windows2019.iso" -VMProcessor 2 -VirtualizationServer VMSRV01
+
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmdeployment
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMDeployment
     #>
     Param(
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(Mandatory, ValueFromPipeline)]
+        #Provide a virtual machine name
         [String]$VMName,
-        [Parameter(Mandatory=$true)]
-        $VMRam,
-        [Parameter(Mandatory=$true)]
-        $VMDiskSize,
-        [Parameter(Mandatory=$true)]
+
+        [Parameter(Mandatory)]
+        #Provide number of allocated RAM 
+        [UInt64]$VMRam,
+
+        [Parameter(Mandatory)]
+        #Provide size of the virtual machine disk
+        [UInt64]$VMDiskSize,
+
+        [Parameter(Mandatory)]
+        #Provide the path to an exploitation system iso file
         [String]$VMOS,
-        [Parameter(Mandatory=$true)]
+
+        [Parameter(Mandatory)]
+        #Provide number of attributed v-core
         [Int]$VMProcessor,
-        [Parameter(Mandatory=$true)]
+
+        [Parameter(Mandatory)]
+        #Provide the virtualization server name where the virtual machine will be created
         [String]$VirtualizationServer
     )
 
@@ -318,21 +284,23 @@ Function Add-NewVM {
 Function Uninstall-VM {
     <#
         .SYNOPSIS
-            Uninstall a virtual machine
-        .EXAMPLE
-            Uninstall-VM -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VirtualizationServer VMSRV01
-        .INPUTS
-            VirtuaMachine id
-            Virtualization server name
-        .OUTPUTS
-            Confirmation message
+            Uninstall and delete all file related to a virtual machine
+
         .DESCRIPTION
-            This function will delete the virtual machine data that is provided, virtual machine files
-            and disk file
-        .NOTES
-            Function called on virtual machine creation form commited
+            Uninstall and delete all file related to a virtual machine
+            Take a virtual machine Id and a virtualization server name
+
+        .INPUTS
+            None
+
+        .OUTPUTS
+            Log with OK status else return log error
+        
+        .EXAMPLE
+            PS> Uninstall-VM -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VirtualizationServer VMSRV01
+        
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmdeployment
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMDeployment
     #>
     Param(
         [Parameter(Mandatory)]
@@ -404,4 +372,4 @@ Function Uninstall-VM {
     }
 }
 
-Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso, Start-Application
+Export-ModuleMember -Function Add-NewVM, Uninstall-VM, Get-AvailableIso

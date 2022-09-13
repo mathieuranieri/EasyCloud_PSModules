@@ -1,14 +1,15 @@
 ﻿
 Function Convert-Size {            
-    [cmdletbinding()]            
+    [cmdletbinding()]          
     Param(            
-        [validateset("Bytes","KB","MB","GB","TB")]            
-        [string]$From,            
-        [validateset("Bytes","KB","MB","GB","TB")]            
-        [string]$To,            
-        [Parameter(Mandatory=$true)]            
-        [double]$Value,            
-        [int]$Precision = 4            
+        [ValidateSet("Bytes","KB","MB","GB","TB")]            
+        [String]$From,
+
+        [ValidateSet("Bytes","KB","MB","GB","TB")]      
+        [String]$To, 
+
+        [Parameter(Mandatory=$true)]           
+        [Double]$Value           
     )
 
     Switch($From) {            
@@ -28,16 +29,35 @@ Function Convert-Size {
                 
     }            
                 
-    return [Math]::Round($value,$Precision,[MidPointRounding]::AwayFromZero)            
+    return [Math]::Round($value,4,[MidPointRounding]::AwayFromZero)            
                 
 }   
 
 Function Get-VMStatus {
+    <#
+        .SYNOPSIS
+        Display information about an existing virtual machine
+
+        .DESCRIPTION
+        Display information about an existing virtual machine
+        Retrieving information by providing a VM Id and the virtualization server name
+
+        .INPUTS
+        Return VM Status data if worked else return NOK status
+
+        .EXAMPLE
+        PS> Get-VMStatus -VMId a1u2g-3f8jk-1bnps-ajfj2 -VirtualizationServerName VMSRV01
+
+        .LINK
+        https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMConfiguration
+    #>  
     Param(
         [Parameter(Mandatory)]
+        #Provide the Hyper-V virtual machine Id
         [String]$VMId,
 
         [Parameter(Mandatory)]
+        #Provide the server name where the VM is located at
         [String]$VirtualizationServerName
     )
 
@@ -87,15 +107,42 @@ Function Get-VMStatus {
 }
 
 Function Set-VMStatus {
+    <#
+        .SYNOPSIS
+        Put ON or OFF a virtual machine
+
+        .DESCRIPTION
+        Put ON or OFF a virtual machine
+        Provide a virtual machine a status and the virtualization server name
+
+        .INPUTS
+        None
+
+        .OUTPUTS
+        Return ON or OFF if worked else return NOK status
+
+        .DESCRIPTION
+        Put ON or OFF a virtual machine
+        Set to ON or OFF a virtual machine by providing an Id a Status and the Virtualization server name
+
+        .EXAMPLE
+        PS> Set-VMStatus -VMId a1u2g-3f8jk-1bnps-ajfj2 -VMStatus ON -VirtualizationServerName VMSRV01
+
+        .LINK
+        https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMConfiguration
+    #> 
     Param(
         [Parameter(Mandatory)]
+        #Provide the Hyper-V virtual machine Id
         [String]$VMId,
 
         [Parameter(Mandatory)]
+        #Provide the state that will be set the to the virtual machine
         [ValidateSet('ON', 'OFF')]
         [String]$VMStatus,
 
         [Parameter(Mandatory)]
+        #Provide the virtualization server name where the VM is located at
         [String]$VirtualizationServerName
     )
 
@@ -121,31 +168,35 @@ Function Set-VMStatus {
 Function Update-VMMemory {
     <#
         .SYNOPSIS
-            Change memory allocated on a virtual machine
-        .EXAMPLE
-            Update-VMMemory -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -NewVMRam 2GB -VirtualizationServer VMSRV01
-        .INPUTS
-            VirtuaMachine id
-            VirtualMachine new allocated memory
-            Virtualization server name
-        .OUTPUTS
-            Confirmation message
+            Update the memory allocated to a virtual machine
+        
         .DESCRIPTION
-            This function will update the memory allocated to the provided virtual machine with
-            set vm memory command, the virtual machine have to be turned off before
-        .NOTES
-            Function called when settings form is commited
+            Update the memory allocated to a virtual machine
+            Provide a virtual machine Id, new ram number allocated and the virtualization server
+        
+        .INPUTS
+            None
+
+        .OUTPUTS
+            Return OK status else return NOK status
+
+        .EXAMPLE
+            PS> Update-VMMemory -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -NewVMRam 2GB -VirtualizationServer VMSRV01
+
         .LINK
             https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
     #>
     Param(
         [Parameter(Mandatory)]
+        #Provide the Hyper-V virtual machine Id
         [String]$VMId,
 
         [Parameter(Mandatory)]
+        #Provide the new ram number that will be allocated to the virtual machine
         [UInt64]$NewVMRam,
 
         [Parameter(Mandatory)]
+        #Provide the virtualization server where the virtual machine is located at
         [String]$VirtualizationServerName
     )
 
@@ -157,7 +208,6 @@ Function Update-VMMemory {
         } 
         
         Catch {
-            $_
             Return "NOK"
         }
     }
@@ -166,31 +216,35 @@ Function Update-VMMemory {
 Function Update-VMVCPU {
     <#
         .SYNOPSIS
-            Change number of virtual cpu allocated on a virtual machine
-        .EXAMPLE
-            Update-VMVCPU -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -NewVMVCPU 2 -VirtualizationServer VMSRV01
-        .INPUTS
-            VirtuaMachine id
-            VirtualMachine new number of vcpu
-            Virtualization server name
-        .OUTPUTS
-            Confirmation message
+            Update the number of virtual cores allocated to a virtual machine
+        
         .DESCRIPTION
-            This function will update the number of vcpu allocated with set vm processor command
-            the virtual machine have to be turned off before
-        .NOTES
-            Function called when settings form is commited
+            Update the number of virtual cores allocated to a virtual machine
+            Provide a virtual machine Id, the number of v-cpu that will be allocated and the virtualization server name
+
+        .INPUTS
+            None
+            
+        .OUTPUTS
+            Return OK else return NOK
+
+        .EXAMPLE
+            PS> Update-VMVCPU -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -NewVMVCPU 2 -VirtualizationServer VMSRV01
+
         .LINK
             https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
     #>
     Param(
         [Parameter(Mandatory)]
+        #Provide the Hyper-V virtual machine Id
         [String]$VMId,
 
         [Parameter(Mandatory)]
+        #Provided the number of V-CPU that will be allocated
         [Int]$NewVMVCPU,
 
         [Parameter(Mandatory)]
+        #Provide the virtualization server name where the virtual machine machine is located at
         [String]$VirtualizationServerName
     )
 
@@ -214,14 +268,37 @@ Function Update-VMVCPU {
 }
 
 Function Expand-VMDiskSize {
+    <#
+        .SYNOPSIS
+            Expands the maximum authorized size of a virtual disk attached located on a virtualization server
+        
+        .DESCRIPTION
+            Expands the maximum authorized size of a virtual disk attached located on a virtualization server
+            Provide a virtual disk path, the virtualization server name and the new maximum size
+
+        .INPUTS
+            None
+            
+        .OUTPUTS
+            Return OK else return NOK
+
+        .EXAMPLE
+            PS> Expand-VMDiskSize -DiskPath C:\EasyCloud\VirtualMachine\Disk\Disk01.vhdx -VirtualizationServer VMSRV01 -SetMaxSize 100GB
+
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+    #>
     Param (
         [Parameter(Mandatory)]
+        #Virtual disk path on the provided virtualization server
         [String]$DiskPath,
 
         [Parameter(Mandatory)]
+        #Provide the target virtualization server name
         [String]$VirtualizationServerName,
 
         [Parameter(Mandatory)]
+        #Provide the new maximum size that will be set for the virtual disk
         [UInt64]$SetMaxSize
     )
 
@@ -240,35 +317,40 @@ Function Expand-VMDiskSize {
 Function Add-VMDisk {
     <#
         .SYNOPSIS
-            Add a new disk for a virtual machine
+            Attach a new virtual disk to a virtual machine
+        
+        .DESCRIPTION
+            Attach a new virtual disk to a virtual machine
+            Create a new virtual disk and attach it the a virtual machine by providing the Id of it 
+            and the disk name and size and the virtualization server the virtual machine is located at
+        
+        .INPUTS
+            None
+
+        .OUTPUTS
+            Return OK else return NOK
+
         .EXAMPLE
             Add-VMDisk -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VMDiskName "Disk01" -VMDiskSize 30GB -VirtualizationServer VMSRV01
-        .INPUTS
-            VirtuaMachine id
-            New disk name
-            New disk size
-            Virtualization server name
-        .OUTPUTS
-            Confirmation message
-        .DESCRIPTION
-            This function will create and add a new disk to a virtual machine with new vhd command
-            and Add vm hard disk drive command, the virtual machine have to be turned off before
-        .NOTES
-            Function called when settings form is commited
+
         .LINK
             https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
     #>
    Param(
         [Parameter(mandatory=$true)]
+        #Provide an Hyper-V virtual machine Id
         [String]$VMId,
 
         [Parameter(mandatory=$true)]
+        #Provide the name of the new virtual disk
         [String]$VMDiskName,
 
         [Parameter(mandatory=$true)]
+        #Provide the new maximum size of the virtual disk
         [UInt64]$DiskSize,
 
         [Parameter(mandatory=$true)]
+        #Provide the virtualization server name where the virtual machine is located at
         [String]$VirtualizationServer
     )
 
@@ -292,13 +374,11 @@ Function Add-VMDisk {
                     Remove-Item -Path $Path
                 } -ArgumentList $DiskPath
 
-                Write-Host 'Test'
                 Return "NOK"
             }
         }
 
         Catch {
-            $_
             Return "NOK"
         }
     }
@@ -307,31 +387,35 @@ Function Add-VMDisk {
 Function Dismount-VMDisk {
     <#
         .SYNOPSIS
-            Delete a disk for a virtual machine
-        .EXAMPLE
-            Dismount-VMDisk -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VMDiskName "Disk01" -VirtualizationServer VMSRV01
-        .INPUTS
-            VirtuaMachine id
-            Disk name
-            Virtualization server name
-        .OUTPUTS
-            Confirmation message
+            Detach and delete a disk from a virtual machine
+        
         .DESCRIPTION
-            This function will delete a disk from a provided virtual machine by using remove vm hard disk drive command
-            the virtual machine have to be turned off before
-        .NOTES
-            Function called when settings form is commited
+            Detach and delete a disk from a virtual machine
+            Take the virtual machine Id, the disk name and the virtualization server name
+        
+        .EXAMPLE
+            PS> Dismount-VMDisk -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VMDiskName "Disk01" -VirtualizationServer VMSRV01
+        
+        .INPUTS
+           None
+
+        .OUTPUTS
+            Return OK else return NOk
+
         .LINK
             https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
     #>
-   Param(
+    Param(
         [Parameter(mandatory=$true)]
+        #Provide an Hyper-V virtual machine Id
         [String]$VMId,
 
         [Parameter(mandatory=$true)]
+        #Provide the diskname attached the provided virtual machine
         [String]$VMDiskName,
 
         [Parameter(mandatory=$true)]
+        #Provide the server name where the virtual machine is located at
         [String]$VirtualizationServer
     )
 
@@ -367,30 +451,58 @@ Function Dismount-VMDisk {
 }
 
 Function Get-VMAttachedDrives {
+    <#
+        .SYNOPSIS
+            Get a virtual machine attached disks 
+        
+        .DESCRIPTION
+            Get a virtual machine attached disks 
+            Take the virtual machine Id and a virtualization server name
+        
+        .EXAMPLE
+            PS> Get-VMAttachedDrives -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VirtualizationServer VMSRV01
+        
+        .INPUTS
+           None
+
+        .OUTPUTS
+            Return disk list an array of object else return NOK
+
+        .LINK
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+    #>
     Param(
         [Parameter(mandatory=$true)]
+        #Provide an Hyper-V virtual machine Id
         [String]$VMId,
 
         [Parameter(mandatory=$true)]
+        #Provide a virtualization server name where the virtual machine is located at
         [String]$VirtualizationServer
     )
 
     Process {
-        $DiskList = New-Object System.Collections.ArrayList
+        Try {
+            $DiskList = New-Object System.Collections.ArrayList
 
-        $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServer
-        $Disk = ($VM | Get-VMHardDiskDrive).Path
+            $VM = Get-VM -Id $VMId -ComputerName $VirtualizationServer
+            $Disk = ($VM | Get-VMHardDiskDrive).Path
 
-        $Disk | ForEach-Object {
-            $DiskList.Add(@{
-                "vmId" = $VMId 
-                "disk" = "$_" 
-            }) | Out-Null    
+            $Disk | ForEach-Object {
+                $DiskList.Add(@{
+                    "vmId" = $VMId 
+                    "disk" = "$_" 
+                }) | Out-Null    
+            }
+
+            $DiskList = ConvertTo-Json -InputObject $DiskList
+
+            Return $DiskList
         }
 
-        $DiskList = ConvertTo-Json -InputObject $DiskList
-
-        Return $DiskList   
+        Catch {
+            Return 'NOK'
+        }
     }
 }
 
