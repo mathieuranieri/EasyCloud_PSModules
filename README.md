@@ -33,15 +33,12 @@ Module : [VMDeployment.psm1](./VMDeployment/VMDeployment.psm1)
 Usage :
 ```powershell
 Add-NewVM -VMName "VirtualMachine01" -VMRAM 2GB -VMDiskSize 50GB -VMOS "\\EASYCLOUD-APP\Iso\Win2016.Iso" -VMProcessor 1 -VirtualizationServer "VMSRV01"
-#Return confirmation message & Virtual Machine ID
 ```
 ```powershell
 Get-AvailableIso
-#Return JSON Data
 ```
 ```powershell
 Uninstall-VM -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -VirtualizationServer "VMSRV01"
-#Return confirmation Message
 ```
 
 ### VMMonitoring
@@ -55,15 +52,12 @@ Module : [VMMonitoring.psm1](./VMMonitoring/VMMonitoring.psm1)
 Usage :
 ```powershell
 Update-MonitoringMode -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -isMonitored $True -VirtualizationServer "VMSRV01"
-#Return confirmation message
 ```
 ```powershell
 Get-MonitoringData -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -VirtualizationServer "VMSRV01"
-#Return JSON Data
 ```
 ```powershell
 Get-MonitoringMode -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980"
-#Return True / False
 ```
 
 ### VMConfiguration
@@ -78,17 +72,13 @@ Module : [VMConfiguration.psm1](./VMConfiguration/VMConfiguration.psm1)
 Usage :
 ```powershell
 Update-VMMemory -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -NewVMRam 2GB -VirtualizationServer VMSRV01
-#Return confirmation message
 ```
 ```powershell
 Update-VMVCPU  -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -NewVMVCPU 4 -VirtualizationServer VMSRV01
-#Return confirmation message
 ```
 ```powershell
 Add-VMDisk -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -DiskName "MyDisk" -DiskSize 100GB -VirtualizationServer VMSRV01
-#Return confirmation message
 ```
 ```powershell
 Dismount-VMDisk -VMId "c885c954-b9d0-4f58-a3a0-19cf21ea7980" -DiskName "MyDisk" -VirtualizationServer VMSRV01
-#Return confirmation message
 ```
