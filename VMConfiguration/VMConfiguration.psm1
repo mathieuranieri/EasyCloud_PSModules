@@ -184,7 +184,7 @@ Function Update-VMMemory {
             PS> Update-VMMemory -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -NewVMRam 2GB -VirtualizationServer VMSRV01
 
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMConfiguration
     #>
     Param(
         [Parameter(Mandatory)]
@@ -232,7 +232,7 @@ Function Update-VMVCPU {
             PS> Update-VMVCPU -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -NewVMVCPU 2 -VirtualizationServer VMSRV01
 
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMConfiguration
     #>
     Param(
         [Parameter(Mandatory)]
@@ -286,7 +286,7 @@ Function Expand-VMDiskSize {
             PS> Expand-VMDiskSize -DiskPath C:\EasyCloud\VirtualMachine\Disk\Disk01.vhdx -VirtualizationServer VMSRV01 -SetMaxSize 100GB
 
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMConfiguration
     #>
     Param (
         [Parameter(Mandatory)]
@@ -334,7 +334,7 @@ Function Add-VMDisk {
             Add-VMDisk -VMId c885c954-b9d0-4f58-a3a0-19cf21ea7980 -VMDiskName "Disk01" -VMDiskSize 30GB -VirtualizationServer VMSRV01
 
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMConfiguration
     #>
    Param(
         [Parameter(mandatory=$true)]
@@ -403,7 +403,7 @@ Function Dismount-VMDisk {
             Return OK else return NOk
 
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMConfiguration
     #>
     Param(
         [Parameter(mandatory=$true)]
@@ -469,7 +469,7 @@ Function Get-VMAttachedDrives {
             Return disk list an array of object else return NOK
 
         .LINK
-            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main#vmconfiguration
+            https://github.com/Goldenlagen/EasyCloud_PSModules/tree/main/VMConfiguration
     #>
     Param(
         [Parameter(mandatory=$true)]
